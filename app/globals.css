@@ -1,0 +1,1142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Epic Games Store color scheme */
+    --background: 220 13% 5%;
+    --foreground: 210 40% 98%;
+    --card: 220 13% 9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 220 13% 9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 13% 14%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 220 13% 18%;
+    --muted-foreground: 215 20% 55%;
+    --accent: 217 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 13% 15%;
+    --input: 220 13% 15%;
+    --ring: 217 100% 50%;
+    --radius: 0.5rem;
+    --chart-1: 217 100% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    
+    /* Epic Games Store tokens */
+    --epic-dark: #121212;
+    --epic-darker: #121212;
+    --epic-surface: #1a1a1a;
+    --epic-blue: #0078f4;
+    --epic-blue-dark: #0052cc;
+    --epic-blue-light: #1e90ff;
+    --epic-text: #ffffff;
+    --epic-text-secondary: #b3b3b3;
+    --epic-glow: rgba(0, 120, 244, 0.5);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-inter), system-ui, sans-serif;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #121212;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2d3a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #0078f4;
+  box-shadow: none;
+}
+
+.game-card {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+
+.game-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: none;
+}
+
+.game-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(0, 120, 244, 0.3), rgba(0, 120, 244, 0.1), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.game-card:hover::before {
+  opacity: 1;
+}
+
+.cover-gradient {
+  background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+}
+
+.hero-gradient {
+  background: linear-gradient(to right, rgba(13,15,22,0.98) 30%, rgba(13,15,22,0.7) 60%, transparent 100%);
+}
+
+.store-command {
+  isolation: isolate;
+}
+
+.store-command::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(118deg, rgba(2, 6, 23, 0.98) 0%, rgba(15, 23, 42, 0.84) 48%, rgba(6, 78, 59, 0.42) 100%),
+    linear-gradient(28deg, rgba(14, 165, 233, 0.2), transparent 32%, rgba(245, 158, 11, 0.12) 72%, transparent);
+  z-index: -2;
+}
+
+.store-command-grid {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,0.85), transparent 92%);
+  opacity: 0.5;
+}
+
+.store-command canvas {
+  opacity: 0.96;
+}
+
+@media (max-width: 640px) {
+  .store-command canvas {
+    opacity: 0.3;
+  }
+}
+
+.badge-free {
+  background: linear-gradient(135deg, #0ea5e9, #22d3ee);
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.5);
+}
+
+.badge-discount {
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
+.badge-owned {
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+}
+
+.nav-link {
+  position: relative;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: hsl(199 89% 48%);
+  transition: width 0.2s ease;
+}
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
+}
+
+.screenshot-thumb {
+  transition: border-color 0.15s ease, opacity 0.15s ease;
+}
+.screenshot-thumb:hover {
+  border-color: hsl(199 89% 48%);
+  opacity: 1;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, hsl(220 13% 14%) 25%, hsl(220 13% 20%) 50%, hsl(220 13% 14%) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.section-header {
+  position: relative;
+  padding-left: 16px;
+}
+.section-header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: hsl(199 89% 48%);
+  border-radius: 2px;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+.game-card-3d {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .game-card-3d:hover {
+    transform: perspective(1200px) rotateX(2.5deg) rotateY(-3deg) translateY(-6px);
+  }
+}
+
+.game-card-sheen {
+  background:
+    linear-gradient(115deg, transparent 0%, rgba(103, 232, 249, 0.12) 42%, rgba(245, 158, 11, 0.18) 52%, transparent 64%),
+    radial-gradient(circle at 16% 12%, rgba(34, 197, 94, 0.18), transparent 28%);
+}
+
+.game-card-scanlines {
+  background-image: linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px);
+  background-size: 100% 7px;
+  mix-blend-mode: overlay;
+}
+
+.catalog-stage {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(6, 182, 212, 0.24), transparent 34%),
+    radial-gradient(circle at 78% 8%, rgba(245, 158, 11, 0.18), transparent 28%),
+    radial-gradient(circle at 52% 72%, rgba(168, 85, 247, 0.16), transparent 30%),
+    #121212;
+}
+
+.catalog-perspective-grid {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 56px 56px;
+  transform: perspective(700px) rotateX(58deg) translateY(-28%);
+  transform-origin: top;
+  opacity: 0.42;
+}
+
+.pro-store-panel {
+  isolation: isolate;
+}
+
+.pro-store-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: linear-gradient(90deg, rgba(0,0,0,0.7), transparent 76%);
+}
+
+/* ——— NexusVault Store (Epic-inspired) ——— */
+:root {
+  --store-surface: #1a1a1a;
+  --store-elevated: #1f1f1f;
+  --store-border: rgba(255, 255, 255, 0.12);
+  --store-border-subtle: #2a2a2a;
+  --store-text: #ffffff;
+  --store-text-secondary: #f5f5f5;
+  --store-text-muted: rgba(255, 255, 255, 0.62);
+  --store-accent: #3b82f6;
+  --store-accent-hover: #2563eb;
+  --store-accent-soft: #60a5fa;
+  --store-sale: #ffc533;
+  --store-radius: 8px;
+  --store-radius-lg: 8px;
+  --store-max: 1600px;
+}
+
+body {
+  background: #121212;
+}
+
+.store-shell {
+  background: #121212;
+}
+
+.store-dashboard-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid #2a2a2a;
+  background: #1a1a1a;
+  padding: clamp(1rem, 2.3vw, 2rem);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 120, 244, 0.1) inset;
+}
+
+.store-dashboard-hero::before {
+  content: none;
+}
+
+.store-dashboard-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.store-side-nav {
+  display: none;
+  width: 6rem;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  padding: 2rem 0;
+  min-height: calc(100vh - 3rem);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 70px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(20px);
+}
+
+@media (min-width: 1280px) {
+  .store-side-nav {
+    display: flex;
+  }
+}
+
+.store-side-btn,
+.store-top-icon,
+.store-heart-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.72);
+  transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.store-side-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 9999px;
+}
+
+.store-side-btn:hover,
+.store-side-btn-active {
+  color: #fff;
+  background: rgba(59, 130, 246, 0.18);
+}
+
+.store-top-icon {
+  position: relative;
+  height: 44px;
+  width: 44px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.store-top-icon:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.store-top-icon span {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  height: 8px;
+  width: 8px;
+  border-radius: 9999px;
+  background: #3b82f6;
+  box-shadow: 0 0 0 3px #121212;
+}
+
+.store-search-input {
+  border: 1px solid rgba(0, 120, 244, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 24px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.store-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.store-search-input:focus {
+  border-color: rgba(0, 120, 244, 0.6);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.1), 
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    0 0 0 3px rgba(0, 120, 244, 0.1);
+}
+
+.store-spotlight-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48);
+}
+
+.store-glass-tag {
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.18);
+  padding: 0.45rem 0.9rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(14px);
+}
+
+.store-price-pill,
+.store-mini-price,
+.store-wide-price {
+  background: linear-gradient(135deg, #0078f4 0%, #1e90ff 100%);
+  color: #fff;
+  box-shadow: none;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.store-price-pill {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  padding: 0.65rem 1.25rem;
+  font-weight: 800;
+}
+
+.store-price-pill span {
+  font-size: 0.78rem;
+  font-weight: 700;
+  opacity: 0.82;
+}
+
+.store-popular-panel {
+  border-radius: 8px;
+  /* background: rgba(9, 8, 18, 0.36); */
+  padding: 0.25rem 0;
+}
+
+.store-popular-row,
+.store-category-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-radius: 8px;
+  color: #fff;
+  transition: background 0.2s ease;
+}
+
+.store-popular-row {
+  padding: 0.35rem;
+}
+
+.store-popular-row:hover,
+.store-category-row:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.store-mini-price {
+  flex-shrink: 0;
+  border-radius: 9999px;
+  padding: 0.42rem 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.store-category-row {
+  position: relative;
+  min-width: 0;
+  padding: 0.2rem;
+}
+
+.store-wide-price {
+  width: min(100%, 280px);
+  border-radius: 9999px;
+  padding: 0.48rem 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.store-heart-btn {
+  align-self: flex-start;
+  color: #fff;
+  padding: 0.45rem;
+}
+
+.store-heart-btn:hover {
+  color: #3b82f6;
+  transform: scale(1.06);
+}
+
+.store-heart-btn input:checked ~ .heart {
+  color: #3b82f6;
+}
+
+@media (max-width: 640px) {
+  .store-dashboard-hero {
+    padding: 1rem;
+  }
+
+  .store-popular-panel h2 {
+    font-size: 1.35rem;
+    line-height: 1.15;
+  }
+
+  .store-popular-row {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .store-popular-row img {
+    width: 88px !important;
+    height: 62px !important;
+  }
+
+  .store-mini-price {
+    grid-column: 2;
+    justify-self: start;
+    width: fit-content;
+    padding: 0.35rem 0.75rem;
+  }
+}
+
+/* Typography utilities */
+.store-eyebrow {
+  display: inline-block;
+  border-radius: var(--store-radius);
+  background: rgba(0, 120, 244, 0.15);
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #0078f4;
+}
+
+.store-section-accent {
+  display: block;
+  width: 3px;
+  height: 1.35rem;
+  flex-shrink: 0;
+  border-radius: 2px;
+  background: #0078f4;
+  box-shadow: none;
+}
+
+.store-section-accent-sale {
+  background: #ffc533;
+  box-shadow: none;
+}
+
+.store-section-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  color: var(--store-text);
+}
+
+@media (min-width: 640px) {
+  .store-section-title {
+    font-size: 1.5rem;
+  }
+}
+
+.store-link {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0078f4;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+.store-link:hover {
+  color: #1e90ff;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* Buttons */
+.store-btn-primary {
+  border-radius: var(--store-radius);
+  background: linear-gradient(135deg, #fff 0%, #f5f5f5 100%);
+  padding: 0.875rem 1.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #000;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+.store-btn-primary:hover {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%);
+  box-shadow: none;
+}
+.store-btn-primary:active {
+  box-shadow: none;
+}
+.store-btn-secondary {
+  border-radius: var(--store-radius);
+  border: 1px solid rgba(0, 120, 244, 0.3);
+  background: rgba(0, 120, 244, 0.08);
+  padding: 0.875rem 1.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  backdrop-filter: blur(16px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: none;
+}
+.store-btn-secondary:hover {
+  border-color: rgba(0, 120, 244, 0.6);
+  background: rgba(0, 120, 244, 0.15);
+  box-shadow: none;
+}
+.store-btn-secondary:active {
+  box-shadow: none;
+}
+
+/* Quick nav chips */
+.store-chip {
+  border-radius: 9999px;
+  border: 1px solid var(--store-border);
+  background: var(--store-surface);
+  padding: 0.625rem 1.125rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--store-text-secondary);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.store-chip:hover {
+  border-color: #444;
+  background: var(--store-elevated);
+  color: var(--store-text);
+}
+.store-chip-active {
+  border-color: var(--store-accent);
+  background: rgba(0, 120, 244, 0.16);
+  color: var(--store-text);
+  box-shadow: 0 2px 8px rgba(0, 120, 244, 0.2);
+}
+
+.store-quick-nav {
+  scrollbar-width: none;
+}
+.store-quick-nav::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hero */
+.store-hero {
+  background: var(--store-bg);
+  position: relative;
+}
+
+.store-hero-gradient-v {
+  background: linear-gradient(
+    to top,
+    rgba(16, 16, 16, 1) 0%,
+    rgba(16, 16, 16, 0.85) 25%,
+    rgba(16, 16, 16, 0.55) 50%,
+    rgba(16, 16, 16, 0.25) 75%,
+    transparent 100%
+  );
+}
+
+.store-hero-gradient-h {
+  background: linear-gradient(
+    to right,
+    rgba(16, 16, 16, 0.98) 0%,
+    rgba(16, 16, 16, 0.82) 28%,
+    rgba(16, 16, 16, 0.45) 52%,
+    rgba(16, 16, 16, 0.18) 72%,
+    transparent 85%
+  );
+}
+
+.store-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 30% 50%,
+    rgba(0, 120, 244, 0.08) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
+  z-index: 5;
+}
+
+.store-hero-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 45;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.12);
+}
+.store-hero-progress-bar {
+  height: 100%;
+  background: var(--store-accent);
+  transition: width 0.1s linear;
+}
+
+.store-hero-thumb {
+  position: relative;
+  border-radius: var(--store-radius);
+  transition: background 0.2s ease;
+}
+.store-hero-thumb-active {
+  background: var(--store-elevated);
+}
+.store-hero-thumb-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--store-accent);
+}
+
+/* Spotlight */
+.store-spotlight {
+  border-radius: var(--store-radius-lg);
+  border: 1px solid var(--store-border);
+  overflow: hidden;
+  background: var(--store-surface);
+}
+
+.store-spotlight-gradient-v {
+  background: linear-gradient(to top, rgba(16, 16, 16, 0.95) 0%, transparent 55%);
+}
+.store-spotlight-gradient-h {
+  background: linear-gradient(to right, rgba(16, 16, 16, 0.9) 0%, transparent 65%);
+}
+
+/* Game cards */
+/* Game cards */
+.store-card {
+  display: flex;
+  flex-direction: column;
+  transition: none;
+  perspective: 1000px;
+}
+
+@media (max-width: 640px) {
+  .store-card {
+    perspective: none;
+  }
+}
+
+.store-card-media {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--store-radius);
+  background: var(--store-elevated);
+
+  /* ❌ OLD: box-shadow bor edi */
+  /* ✅ NEW: clean border only */
+  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+
+  transition: none;
+  transform-style: flat;
+}
+
+.store-card:hover .store-card-media {
+  /* ❌ OLD: katta shadow bor edi */
+  box-shadow: none;
+
+  transform: none;
+}
+
+@media (max-width: 640px) {
+  .store-card:hover .store-card-media {
+    transform: none;
+  }
+  .store-card-media {
+    transform-style: flat;
+  }
+}
+
+.store-card-media::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.03) 40%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 60%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.store-card:hover .store-card-media::before {
+  opacity: 1;
+}
+
+.store-card-media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+
+  border: 1px solid rgba(255, 255, 255, 0.06);
+
+  pointer-events: none;
+  transition: border-color 0.4s ease;
+  z-index: 2;
+}
+
+.store-card:hover .store-card-media::after {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ❌ OLD: glow animation bor edi */
+/* .store-card:hover {
+  animation: epic-glow 2s ease-in-out;
+} */
+
+/* ❌ OPTIONAL: agar ishlatilmasa o‘chir */
+@keyframes epic-glow {
+  0%, 100% {
+    box-shadow: none;
+  }
+  50% {
+    box-shadow: none;
+  }
+}
+/* Rails */
+.store-rail-wrap {
+  position: relative;
+}
+.store-rail-wrap::before,
+.store-rail-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 12px;
+  width: 64px;
+  z-index: 2;
+  pointer-events: none;
+}
+.store-rail-wrap::before {
+  left: 0;
+  background: linear-gradient(to right, var(--store-bg) 0%, rgba(16, 16, 16, 0.8) 40%, transparent 100%);
+}
+.store-rail-wrap::after {
+  right: 0;
+  background: linear-gradient(to left, var(--store-bg) 0%, rgba(16, 16, 16, 0.8) 40%, transparent 100%);
+}
+
+@media (max-width: 640px) {
+  .store-rail-wrap::before,
+  .store-rail-wrap::after {
+    width: 48px;
+    bottom: 8px;
+  }
+}
+
+.store-rail {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  padding-bottom: 6px;
+  padding-left: 4px;
+  padding-right: 4px;
+  box-shadow: none;
+  transform: none;
+}
+.store-rail::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .store-rail {
+    gap: 0.75rem;
+    padding-bottom: 4px;
+  }
+}
+
+.store-rail-arrow {
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid var(--store-border);
+  background: var(--store-elevated);
+  color: #fff;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: none;
+}
+.store-rail-arrow:hover:not(:disabled) {
+  border-color: #555;
+  background: #2a2a2a;
+  transform: scale(1.05);
+  box-shadow: none;
+}
+.store-rail-arrow:active:not(:disabled) {
+  transform: scale(0.95);
+}
+.store-rail-arrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .store-rail-arrow {
+    height: 2.25rem;
+    width: 2.25rem;
+  }
+  .store-rail-arrow svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.store-card-skeleton {
+  border-radius: var(--store-radius);
+  background: linear-gradient(
+    90deg,
+    #1a1a1a 0%,
+    #252525 25%,
+    #2a2a2a 50%,
+    #252525 75%,
+    #1a1a1a 100%
+  );
+  background-size: 200% 100%;
+  animation: epic-shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes epic-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* New Epic Games Store animations */
+/* @keyframes epic-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 120, 244, 0.4), inset 0 0 20px rgba(0, 120, 244, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 120, 244, 0.6), inset 0 0 20px rgba(0, 120, 244, 0.15);
+  }
+} */ 
+
+ @keyframes epic-slide-up {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes epic-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Card hover enhancements */
+.store-card:hover {
+  animation: none;
+}
+
+/* Smooth section transitions */
+.store-section {
+  animation: epic-fade-in 0.6s ease-out backwards;
+}
+
+.store-hero-skeleton {
+  background: linear-gradient(
+    90deg,
+    #1a1a1a 0%,
+    #252525 25%,
+    #2a2a2a 50%,
+    #252525 75%,
+    #1a1a1a 100%
+  );
+  background-size: 200% 100%;
+  animation: epic-shimmer 2s ease-in-out infinite;
+}
+
+.store-text-skeleton {
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    #1a1a1a 0%,
+    #252525 25%,
+    #2a2a2a 50%,
+    #252525 75%,
+    #1a1a1a 100%
+  );
+  background-size: 200% 100%;
+  animation: epic-shimmer 1.6s ease-in-out infinite;
+}
+
+/* Sale banner */
+.store-sale-banner {
+  border-radius: var(--store-radius-lg);
+  border: 1px solid var(--store-border);
+  background: #1a1a1a;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.store-sale-banner-accent {
+  background: linear-gradient(90deg, rgba(245, 166, 35, 0.6), rgba(245, 166, 35, 0.3), rgba(245, 166, 35, 0.1), transparent);
+  height: 4px;
+  box-shadow: none;
+}
+
+/* Discover CTA */
+.store-discover-cta {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--store-radius-lg);
+  border: 1px solid var(--store-border);
+  background:
+    radial-gradient(ellipse 80% 100% at 100% 50%, rgba(0, 120, 244, 0.32), transparent 50%),
+    var(--store-surface);
+  box-shadow: none;
+}
+
+.store-discover-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Legacy aliases */
+.epic-hero-wrap,
+.store-hero-wrap {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.18), transparent 20%),
+    radial-gradient(circle at 15% 20%, rgba(168, 85, 247, 0.12), transparent 16%),
+    linear-gradient(180deg, #090a0f 0%, #0f1118 42%, #101019 100%);
+}
+.store-hero-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 30% 10%, rgba(255, 255, 255, 0.08), transparent 20%),
+    radial-gradient(circle at 80% 25%, rgba(56, 189, 248, 0.12), transparent 18%),
+    radial-gradient(circle at 50% 70%, rgba(168, 85, 247, 0.1), transparent 16%);
+  pointer-events: none;
+}
+.epic-hero-gradient-v,
+.store-hero-gradient-v {
+  background: linear-gradient(to top, rgba(16, 16, 16, 1) 0%, rgba(16, 16, 16, 0.45) 45%, transparent 100%);
+}
+.epic-hero-gradient-h,
+.store-hero-gradient-h {
+  background: linear-gradient(to right, rgba(16, 16, 16, 0.98) 0%, rgba(16, 16, 16, 0.55) 42%, transparent 72%);
+}
+.epic-rail,
+.store-rail {
+  scrollbar-width: none;
+}
+.epic-rail::-webkit-scrollbar,
+.store-rail::-webkit-scrollbar {
+  display: none;
+}
+.epic-sale-badge,
+.store-badge-sale {
+  border-radius: var(--store-radius);
+  background: var(--store-sale);
+  padding: 3px 7px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #121212;
+}
+.epic-free-badge,
+.store-badge-free {
+  border-radius: var(--store-radius);
+  background: var(--store-accent);
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #fff;
+}
+.epic-card-skeleton,
+.store-card-skeleton {
+  background: linear-gradient(90deg, #1a1a1a 20%, #282828 50%, #1a1a1a 80%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
