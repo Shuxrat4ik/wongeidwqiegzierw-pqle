@@ -1,0 +1,163 @@
+═══════════════════════════════════════════════════════════════════════════════
+                        WHERE YOUR GAMES COME FROM
+═══════════════════════════════════════════════════════════════════════════════
+
+📂 PRIMARY SOURCE: lib/top-games.ts (Lines 58-179)
+───────────────────────────────────────────────────────────────────────────────
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ TOP_GAME_DATA: 40+ Hand-Curated Real Games                              │
+  │ ─────────────────────────────────────────────────────────────────────── │
+  │                                                                          │
+  │ Lines 58-120+:                                                          │
+  │ • Counter-Strike 2 (Steam app 730)                                     │
+  │ • Dota 2 (Steam app 570)                                               │
+  │ • PUBG: BATTLEGROUNDS (Steam app 578080)                               │
+  │ • Apex Legends                                                          │
+  │ • Grand Theft Auto V Legacy                                             │
+  │ • Rust                                                                  │
+  │ • Baldur's Gate 3                                                       │
+  │ • Elden Ring                                                            │
+  │ • Cyberpunk 2077                                                        │
+  │ • Red Dead Redemption 2                                                 │
+  │ • The Witcher 3: Wild Hunt                                              │
+  │ • Palworld                                                              │
+  │ • Hades                                                                 │
+  │ • Stardew Valley                                                        │
+  │ • Hollow Knight                                                         │
+  │ • Celeste                                                               │
+  │ • And 24+ more real games...                                            │
+  │                                                                          │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ EXPANSION LOGIC: Generate 1,000 Games from 40 Base Games                 │
+  │ ─────────────────────────────────────────────────────────────────────── │
+  │                                                                          │
+  │ const CATALOG_SIZE = 1000                                              │
+  │                                                                          │
+  │ 40 Base Games × 25 Cycles = 1,000 Total Games                          │
+  │                                                                          │
+  │ Cycle 0: "Counter-Strike 2"                                            │
+  │ Cycle 1: "Counter-Strike 2: Definitive Edition"                        │
+  │ Cycle 2: "Counter-Strike 2: Ultimate Bundle"                           │
+  │ Cycle 3: "Counter-Strike 2: Next-Gen Drop"                             │
+  │ ... (10 edition names, cycles repeat)                                  │
+  │                                                                          │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+📊 GAME DATA FLOW
+───────────────────────────────────────────────────────────────────────────────
+
+  ┌──────────────────┐
+  │ lib/top-games.ts │  ◄─── 40+ real games with Steam data
+  └────────┬─────────┘
+           │
+           ├─► Generate 1,000 game variants (TOP_GAME_SEEDS)
+           │
+           ├─► Each has:
+           │   ├─ Title (with edition name)
+           │   ├─ Slug (URL-friendly)
+           │   ├─ Images (from Steam CDN)
+           │   ├─ Price, discount, rating
+           │   ├─ Genre, tags, description
+           │   ├─ System requirements
+           │   └─ Videos (YouTube)
+           │
+           └─► Used in:
+               ├─ Homepage (hero carousel, fallback)
+               ├─ Store (browse all games)
+               ├─ Game detail pages
+               └─ Search/filtering
+
+
+💾 TWO SOURCES FOR GAMES
+───────────────────────────────────────────────────────────────────────────────
+
+  PRIMARY: TOP_GAME_SEEDS (lib/top-games.ts)
+  ──────────────────────────────────────────────
+  ✓ Always available (no database needed)
+  ✓ 1,000 games ready to display
+  ✓ Real Steam data and images
+  ✓ Works offline
+  ✓ Used as fallback if DB fails
+
+  SECONDARY: Supabase Database (if migrations applied)
+  ───────────────────────────────────────────────────
+  ✓ Add unlimited custom games
+  ✓ Manage via admin panel
+  ✓ Featured games sections
+  ✓ User reviews and ratings
+  ✓ Persistent storage
+
+
+🎮 USAGE IN YOUR APP
+───────────────────────────────────────────────────────────────────────────────
+
+  HOMEPAGE:
+  ─────────
+  1. Try to load featured_games from Supabase
+  2. If empty, show top 12 from TOP_GAME_SEEDS
+  3. Display hero carousel with game details
+
+  ADMIN PANEL:
+  ──────────
+  1. Try to load games from admin API (Supabase)
+  2. If API fails, load directly from Supabase
+  3. If no migrations, show empty (no fallback)
+  4. Note: Admin doesn't show TOP_GAME_SEEDS
+
+  STORE BROWSE:
+  ─────────────
+  1. Try to load from Supabase games table
+  2. If empty, use TOP_GAME_SEEDS
+  3. Apply search/filter on client
+  4. Display paginated results
+
+  GAME DETAIL PAGE:
+  ─────────────────
+  1. Look up by slug from TOP_GAME_SEEDS
+  2. Show full details + system requirements
+  3. Display related games from same source
+
+
+📝 KEY FILES
+───────────────────────────────────────────────────────────────────────────────
+
+  lib/top-games.ts
+  ├─ TOP_GAME_DATA (lines 58-120)        ◄─── Edit to add/change games
+  ├─ CATALOG_SIZE = 1000 (line 179)
+  ├─ TOP_GAME_SEEDS (line 248)            ◄─── Exported 1,000 games
+  └─ Helper functions for game generation
+
+  lib/db.ts
+  ├─ fetchGames()                         ◄─── Load from Supabase
+  └─ normalizeDbGameRow()
+
+  lib/game-collections.ts
+  ├─ readSeedCollection()                 ◄─── Load seed games
+  └─ toggleSeedWishlist()
+
+  app/page.tsx
+  └─ loadHomepage()                       ◄─── Combines both sources
+
+═══════════════════════════════════════════════════════════════════════════════
+
+QUICK ANSWER TO YOUR QUESTION:
+
+Q: Where are my store games coming from?
+A: lib/top-games.ts - 1,000 games generated from 40 base games
+
+Q: Which folder?
+A: lib/ folder, specifically: lib/top-games.ts
+
+Q: Can I edit them?
+A: Yes! Edit lines 58-120 in lib/top-games.ts to add/modify games
+
+Q: Can I add more?
+A: Yes! Three options:
+   1. Edit TOP_GAME_DATA array (40+ games)
+   2. Apply Supabase migrations and use admin panel
+   3. Bulk import with migration files
+
+═══════════════════════════════════════════════════════════════════════════════
