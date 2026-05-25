@@ -1,26 +1,26 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: { 
+  images: {
     unoptimized: true,
-    // Add caching headers for image optimization
     formats: ['image/webp', 'image/avif'],
   },
+
   turbopack: {
     root: __dirname,
   },
+
   allowedDevOrigins: [
     'localhost',
     '127.0.0.1',
     '192.168.100.3',
     '192.168.100.10',
   ],
-  // Improve build stability and error handling
-  swcMinify: true,
+
   compress: true,
   poweredByHeader: false,
   generateEtags: true,
-  // Cache static assets for 1 year (max)
-  headers: () => {
+
+  headers: async () => {
     return [
       {
         source: '/static/:path*',
@@ -45,7 +45,3 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
-
-import('@opennextjs/cloudflare').then(m => m.initOpenNextCloudflareForDev()).catch(err => {
-  console.error('[next.config] OpenNext Cloudflare initialization error:', err);
-});
