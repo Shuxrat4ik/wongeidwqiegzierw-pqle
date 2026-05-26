@@ -116,7 +116,12 @@ function signingKey(secretAccessKey: string, date: string) {
 export function publicR2Url(key: string) {
   const config = getR2Config();
   if (!config.publicBaseUrl) return null;
-  return `${config.publicBaseUrl.replace(/\/+$/, '')}/${encodePath(key)}`;
+  // Remove leading slashes and strip any leading bucket name that might already be in the key
+  let cleanKey = key.replace(/^\/+/, '');
+  if (cleanKey.startsWith(`${config.bucket}/`)) {
+    cleanKey = cleanKey.slice(config.bucket.length + 1);
+  }
+  return `${config.publicBaseUrl.replace(/\/+$/, '')}/${encodePath(cleanKey)}`;
 }
 
 export function createR2SignedUrl(key: string, expiresIn = 120) {
@@ -128,7 +133,12 @@ export function createR2SignedUrl(key: string, expiresIn = 120) {
   const credentialScope = `${dateStamp}/${R2_REGION}/${S3_SERVICE}/aws4_request`;
   const credential = `${config.accessKeyId}/${credentialScope}`;
   const safeExpires = Math.min(Math.max(Math.floor(expiresIn), 1), 604800);
-  const encodedKey = encodePath(key.replace(/^\/+/, ''));
+  // Remove leading slashes and strip any leading bucket name that might already be in the key
+  let cleanKey = key.replace(/^\/+/, '');
+  if (cleanKey.startsWith(`${config.bucket}/`)) {
+    cleanKey = cleanKey.slice(config.bucket.length + 1);
+  }
+  const encodedKey = encodePath(cleanKey);
 
   const params = new URLSearchParams({
     'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
@@ -152,6 +162,7 @@ export function createR2SignedUrl(key: string, expiresIn = 120) {
     'host',
     'UNSIGNED-PAYLOAD',
   ].join('\n');
+  
   const stringToSign = [
     'AWS4-HMAC-SHA256',
     amzDate,
