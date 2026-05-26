@@ -42,55 +42,21 @@ export function requireR2Config() {
   if (missing.length > 0) {
     throw new Error(`Missing R2 environment variables: ${missing.join(', ')}`);
   }
-
-  if (/^https?:\/\//i.test(config.secretAccessKey)) {
-    throw new Error('CLOUDFLARE_R2_SECRET_ACCESS_KEY must be the R2 secret key, not a URL');
-  }
-
   return config;
-}
-
-export function validateR2Config(): { ok: boolean; error?: string } {
-  const config = getR2Config();
-  const missing = Object.entries({
-    CLOUDFLARE_R2_BUCKET: config.bucket,
-    CLOUDFLARE_R2_ENDPOINT: config.endpoint,
-    CLOUDFLARE_R2_ACCESS_KEY: config.accessKeyId,
-    CLOUDFLARE_R2_SECRET_ACCESS_KEY: config.secretAccessKey,
-  })
-    .filter(([, value]) => !value)
-    .map(([name]) => name);
-
-  if (missing.length > 0) {
-    return { ok: false, error: `Missing R2 environment variables: ${missing.join(', ')}` };
-  }
-
-  if (/^https?:\/\//i.test(config.secretAccessKey)) {
-    return { ok: false, error: 'CLOUDFLARE_R2_SECRET_ACCESS_KEY must be the R2 secret key, not a URL' };
-  }
-
-  return { ok: true };
 }
 
 export function createR2Client() {
   const config = requireR2Config();
-
   return new S3Client({
     region: R2_REGION,
     endpoint: config.endpoint,
-    forcePathStyle: true, // <--- Buni albatta qo'shing
+    forcePathStyle: true, 
     credentials: {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
     },
   });
 }
-
-export const r2 = {
-  send(command: Parameters<S3Client['send']>[0]) {
-    return createR2Client().send(command);
-  },
-};
 
 function hmac(key: Buffer | string, value: string) {
   return createHmac('sha256', key).update(value).digest();
@@ -101,10 +67,7 @@ function sha256Hex(value: string) {
 }
 
 function encodePath(path: string) {
-  return path
-    .split('/')
-    .map((part) => encodeURIComponent(part))
-    .join('/');
+  return path.split('/').map((part) => encodeURIComponent(part)).join('/');
 }
 
 function signingKey(secretAccessKey: string, date: string) {
@@ -112,17 +75,6 @@ function signingKey(secretAccessKey: string, date: string) {
   const kRegion = hmac(kDate, R2_REGION);
   const kService = hmac(kRegion, S3_SERVICE);
   return hmac(kService, 'aws4_request');
-}
-
-export function publicR2Url(key: string) {
-  const config = getR2Config();
-  if (!config.publicBaseUrl) return null;
-  // Remove leading slashes and strip any leading bucket name that might already be in the key
-  let cleanKey = key.replace(/^\/+/, '');
-  if (cleanKey.startsWith(`${config.bucket}/`)) {
-    cleanKey = cleanKey.slice(config.bucket.length + 1);
-  }
-  return `${config.publicBaseUrl.replace(/\/+$/, '')}/${encodePath(cleanKey)}`;
 }
 
 export function createR2SignedUrl(key: string, expiresIn = 120) {
@@ -133,8 +85,7 @@ export function createR2SignedUrl(key: string, expiresIn = 120) {
   const host = new URL(config.endpoint).host;
   const credentialScope = `${dateStamp}/${R2_REGION}/${S3_SERVICE}/aws4_request`;
   const credential = `${config.accessKeyId}/${credentialScope}`;
-  const safeExpires = Math.min(Math.max(Math.floor(expiresIn), 1), 604800);
-  // Remove leading slashes and strip any leading bucket name that might already be in the key
+  
   let cleanKey = key.replace(/^\/+/, '');
   if (cleanKey.startsWith(`${config.bucket}/`)) {
     cleanKey = cleanKey.slice(config.bucket.length + 1);
@@ -145,21 +96,23 @@ export function createR2SignedUrl(key: string, expiresIn = 120) {
     'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
     'X-Amz-Credential': credential,
     'X-Amz-Date': amzDate,
-    'X-Amz-Expires': String(safeExpires),
+    'X-Amz-Expires': String(Math.min(Math.max(Math.floor(expiresIn), 1), 604800)),
     'X-Amz-SignedHeaders': 'host',
   });
 
   const canonicalQueryString = Array.from(params.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-    .sort()
     .join('&');
-  // const canonicalUri = `/${config.bucket}/${encodedKey}`;
-  const canonicalUri = `/${encodedKey}`;
+
+  // ASOSIY TUZATISH: Canonical URI bucket nomini o'z ichiga olishi shart
+  const canonicalUri = `/${config.bucket}/${encodedKey}`;
+  
   const canonicalRequest = [
     'GET',
     canonicalUri,
     canonicalQueryString,
-    `host:${host}\n`,
+    `host:${host}`,
     'host',
     'UNSIGNED-PAYLOAD',
   ].join('\n');
@@ -170,6 +123,7 @@ export function createR2SignedUrl(key: string, expiresIn = 120) {
     credentialScope,
     sha256Hex(canonicalRequest),
   ].join('\n');
+  
   const signature = createHmac('sha256', signingKey(config.secretAccessKey, dateStamp))
     .update(stringToSign)
     .digest('hex');
