@@ -14,9 +14,8 @@ const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
 export const metadata: Metadata = {
   title: 'NexusVault — PC Game Store',
   description: 'Discover, install, and play PC games with a modern storefront experience.',
-  // 'data:' URI o'rniga public papkadagi fayl yo'lini ishlatish tavsiya etiladi
   icons: {
-    icon: '/favicon.ico', 
+    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75" fill="%23fff">N</text></svg>',
   },
 };
 
@@ -26,15 +25,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`dark ${inter.variable} ${outfit.variable} scroll-smooth`}>
+    <html lang="en" className={`dark ${inter.variable} ${outfit.variable}`}>
       <body className="min-h-screen bg-[#121212] flex flex-col font-sans antialiased">
         <AuthProvider>
           <Navbar />
-          
-          {/* MarketplaceShell hamma sahifa uchun umumiy bo'lsa, uni shunday qoldiramiz */}
           <MarketplaceShell />
 
-          <main className="flex-1 w-full">
+          <main className="flex-1 pt-11 w-full h-full">
             {children}
           </main>
 
