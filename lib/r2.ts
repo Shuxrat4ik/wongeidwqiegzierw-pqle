@@ -134,6 +134,7 @@ export function createR2SignedUrl(key: string, expiresIn = 120) {
   const credentialScope = `${dateStamp}/${R2_REGION}/${S3_SERVICE}/aws4_request`;
   const credential = `${config.accessKeyId}/${credentialScope}`;
   const safeExpires = Math.min(Math.max(Math.floor(expiresIn), 1), 604800);
+  
   // Remove leading slashes and strip any leading bucket name that might already be in the key
   let cleanKey = key.replace(/^\/+/, '');
   if (cleanKey.startsWith(`${config.bucket}/`)) {
@@ -153,13 +154,16 @@ export function createR2SignedUrl(key: string, expiresIn = 120) {
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
     .sort()
     .join('&');
-  // const canonicalUri = `/${config.bucket}/${encodedKey}`;
-  const canonicalUri = `/${encodedKey}`;
+  
+  // With forcePathStyle: true, the canonical URI must include the bucket name
+  const canonicalUri = `/${config.bucket}/${encodedKey}`;
+  
   const canonicalRequest = [
     'GET',
     canonicalUri,
     canonicalQueryString,
-    `host:${host}\n`,
+    `host:${host}`,
+    '',
     'host',
     'UNSIGNED-PAYLOAD',
   ].join('\n');
@@ -170,6 +174,7 @@ export function createR2SignedUrl(key: string, expiresIn = 120) {
     credentialScope,
     sha256Hex(canonicalRequest),
   ].join('\n');
+  
   const signature = createHmac('sha256', signingKey(config.secretAccessKey, dateStamp))
     .update(stringToSign)
     .digest('hex');
