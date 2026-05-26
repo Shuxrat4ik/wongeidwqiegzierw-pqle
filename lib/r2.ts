@@ -78,6 +78,7 @@ export function createR2Client() {
   return new S3Client({
     region: R2_REGION,
     endpoint: config.endpoint,
+    forcePathStyle: true, // <--- Buni albatta qo'shing
     credentials: {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
@@ -174,6 +175,10 @@ export function createR2SignedUrl(key: string, expiresIn = 120) {
     .digest('hex');
 
   params.set('X-Amz-Signature', signature);
+
+  console.log("DEBUG: host =", host);
+  console.log("DEBUG: canonicalUri =", canonicalUri);
+  console.log("DEBUG: bucket =", config.bucket);
 
   return `${config.endpoint}/${config.bucket}/${encodedKey}?${params.toString()}`;
 }
