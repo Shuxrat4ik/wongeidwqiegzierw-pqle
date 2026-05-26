@@ -18,12 +18,31 @@ function normalizeEndpoint(endpoint: string, bucket: string) {
   return normalized;
 }
 
+function cleanObjectKey(key: string, bucket: string) {
+  let cleanKey = key.replace(/^\/+/, '');
+  const bucketPrefix = `${bucket}/`;
+  while (cleanKey.startsWith(bucketPrefix)) {
+    cleanKey = cleanKey.slice(bucket.length + 1);
+  }
+  return cleanKey;
+}
+
+function isR2ApiEndpoint(value: string) {
+  try {
+    return new URL(value).hostname.endsWith('.r2.cloudflarestorage.com');
+  } catch {
+    return false;
+  }
+}
+
 export function getR2Config() {
   const bucket = env('CLOUDFLARE_R2_BUCKET', 'R2_BUCKET');
-  const endpoint = normalizeEndpoint(env('CLOUDFLARE_R2_ENDPOINT', 'R2_ENDPOINT'), bucket);
+  const accountId = env('CLOUDFLARE_R2_ACCOUNT_ID', 'R2_ACCOUNT_ID');
+  const rawEndpoint = env('CLOUDFLARE_R2_ENDPOINT', 'R2_ENDPOINT') || (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : '');
+  const endpoint = normalizeEndpoint(rawEndpoint, bucket);
   const accessKeyId = env('CLOUDFLARE_R2_ACCESS_KEY', 'R2_ACCESS_KEY', 'AWS_ACCESS_KEY_ID');
   const secretAccessKey = env('CLOUDFLARE_R2_SECRET_ACCESS_KEY', 'R2_SECRET_KEY', 'AWS_SECRET_ACCESS_KEY');
-  const publicBaseUrl = env('CLOUDFLARE_R2_PUBLIC_URL', 'R2_PUBLIC_URL');
+  const publicBaseUrl = env('CLOUDFLARE_R2_PUBLIC_URL', 'R2_PUBLIC_URL').replace(/\/+$/, '');
 
   return { bucket, endpoint, accessKeyId, secretAccessKey, publicBaseUrl };
 }
@@ -32,7 +51,7 @@ export function requireR2Config() {
   const config = getR2Config();
   const missing = Object.entries({
     CLOUDFLARE_R2_BUCKET: config.bucket,
-    CLOUDFLARE_R2_ENDPOINT: config.endpoint,
+    'CLOUDFLARE_R2_ENDPOINT or CLOUDFLARE_R2_ACCOUNT_ID': config.endpoint,
     CLOUDFLARE_R2_ACCESS_KEY: config.accessKeyId,
     CLOUDFLARE_R2_SECRET_ACCESS_KEY: config.secretAccessKey,
   })
@@ -54,7 +73,7 @@ export function validateR2Config(): { ok: boolean; error?: string } {
   const config = getR2Config();
   const missing = Object.entries({
     CLOUDFLARE_R2_BUCKET: config.bucket,
-    CLOUDFLARE_R2_ENDPOINT: config.endpoint,
+    'CLOUDFLARE_R2_ENDPOINT or CLOUDFLARE_R2_ACCOUNT_ID': config.endpoint,
     CLOUDFLARE_R2_ACCESS_KEY: config.accessKeyId,
     CLOUDFLARE_R2_SECRET_ACCESS_KEY: config.secretAccessKey,
   })
@@ -117,14 +136,13 @@ function signingKey(secretAccessKey: string, date: string) {
 export function publicR2Url(key: string) {
   const config = getR2Config();
   if (!config.publicBaseUrl) return null;
-  // Remove leading slashes and strip any nested bucket names that might already be in the key
-  let cleanKey = key.replace(/^\/+/, '');
-  // Strip bucket prefix if present (can appear multiple times due to malformed paths)
-  const bucketPrefix = `${config.bucket}/`;
-  while (cleanKey.startsWith(bucketPrefix)) {
-    cleanKey = cleanKey.slice(config.bucket.length + 1);
+
+  if (isR2ApiEndpoint(config.publicBaseUrl)) {
+    console.warn('[r2] Ignoring CLOUDFLARE_R2_PUBLIC_URL because it points to the private R2 S3 API endpoint. Use an r2.dev or custom public domain, or leave it empty for signed URLs.');
+    return null;
   }
-  return `${config.publicBaseUrl.replace(/\/+$/, '')}/${encodePath(cleanKey)}`;
+
+  return `${config.publicBaseUrl}/${encodePath(cleanObjectKey(key, config.bucket))}`;
 }
 
 export function createR2SignedUrl(key: string, expiresIn = 120) {
@@ -137,12 +155,7 @@ export function createR2SignedUrl(key: string, expiresIn = 120) {
   const credential = `${config.accessKeyId}/${credentialScope}`;
   const safeExpires = Math.min(Math.max(Math.floor(expiresIn), 1), 604800);
   
-  // Remove leading slashes and strip any nested bucket names that might already be in the key
-  let cleanKey = key.replace(/^\/+/, '');
-  const bucketPrefix = `${config.bucket}/`;
-  while (cleanKey.startsWith(bucketPrefix)) {
-    cleanKey = cleanKey.slice(config.bucket.length + 1);
-  }
+  const cleanKey = cleanObjectKey(key, config.bucket);
   const encodedKey = encodePath(cleanKey);
 
   const params = new URLSearchParams({

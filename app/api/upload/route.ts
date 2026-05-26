@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { createR2Client, requireR2Config } from "@/lib/r2";
+import { createR2Client, publicR2Url, requireR2Config } from "@/lib/r2";
 import { apiError, handleServerError } from "@/lib/server/error-handler";
 
 export const runtime = "nodejs";
@@ -44,9 +44,7 @@ export async function POST(req: Request) {
       })
     );
 
-    const url = config.publicBaseUrl
-      ? `${config.publicBaseUrl.replace(/\/+$/, "")}/${key}`
-      : null;
+    const url = publicR2Url(key);
 
     return NextResponse.json({ key, path: key, url });
   } catch (err) {
