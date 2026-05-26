@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   description: 'Discover, install, and play PC games with a modern storefront experience.',
   icons: {
     icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
   },
 };
 
