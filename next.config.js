@@ -16,6 +16,8 @@ const nextConfig = {
     '192.168.100.10',
   ],
 
+  // test123
+
   compress: true,
   poweredByHeader: false,
   generateEtags: true,
