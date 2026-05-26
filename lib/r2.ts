@@ -77,6 +77,16 @@ function signingKey(secretAccessKey: string, date: string) {
   return hmac(kService, 'aws4_request');
 }
 
+export function publicR2Url(key: string) {
+  const config = getR2Config();
+  if (!config.publicBaseUrl) return null;
+  let cleanKey = key.replace(/^\/+/, '');
+  if (cleanKey.startsWith(`${config.bucket}/`)) {
+    cleanKey = cleanKey.slice(config.bucket.length + 1);
+  }
+  return `${config.publicBaseUrl.replace(/\/+$/, '')}/${encodePath(cleanKey)}`;
+}
+
 export function createR2SignedUrl(key: string, expiresIn = 120) {
   const config = requireR2Config();
   const now = new Date();
@@ -105,7 +115,6 @@ export function createR2SignedUrl(key: string, expiresIn = 120) {
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
     .join('&');
 
-  // ASOSIY TUZATISH: Canonical URI bucket nomini o'z ichiga olishi shart
   const canonicalUri = `/${config.bucket}/${encodedKey}`;
   
   const canonicalRequest = [
