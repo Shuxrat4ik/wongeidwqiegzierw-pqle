@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { createR2SignedUrl, publicR2Url, validateR2Config } from '@/lib/r2';
+import { checkR2Object, createR2SignedUrl, publicR2Url, validateR2Config } from '@/lib/r2';
 import { checkUserOwnsGame } from '@/lib/server/ownership';
 
 export const SIGNED_DOWNLOAD_TTL_SECONDS = 120;
@@ -96,6 +96,15 @@ export async function createSignedGameDownload(
     }
 
     try {
+      const objectCheck = await checkR2Object(path);
+      if (!objectCheck.ok) {
+        return {
+          ok: false as const,
+          status: objectCheck.status,
+          error: `${objectCheck.error}: ${objectCheck.key}`,
+        };
+      }
+
       const url = publicR2Url(path) ?? createR2SignedUrl(path, SIGNED_DOWNLOAD_TTL_SECONDS);
       await recordDownload(admin, userId, game.id);
 

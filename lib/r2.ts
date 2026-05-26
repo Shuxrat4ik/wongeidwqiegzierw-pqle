@@ -1,5 +1,5 @@
 import { createHmac, createHash } from 'crypto';
-import { S3Client } from '@aws-sdk/client-s3';
+import { HeadObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 const R2_REGION = 'auto';
 const S3_SERVICE = 's3';
@@ -110,6 +110,32 @@ export const r2 = {
     return createR2Client().send(command);
   },
 };
+
+export async function checkR2Object(key: string) {
+  const config = requireR2Config();
+  const cleanKey = cleanObjectKey(key, config.bucket);
+
+  try {
+    await createR2Client().send(
+      new HeadObjectCommand({
+        Bucket: config.bucket,
+        Key: cleanKey,
+      })
+    );
+
+    return { ok: true as const, key: cleanKey };
+  } catch (err) {
+    const error = err as { name?: string; $metadata?: { httpStatusCode?: number }; message?: string };
+    const status = error.$metadata?.httpStatusCode;
+
+    if (status === 404 || error.name === 'NotFound' || error.name === 'NoSuchKey') {
+      return { ok: false as const, status: 404, key: cleanKey, error: 'Download file was not found in R2' };
+    }
+
+    console.error('[r2] HeadObject failed:', error.name ?? error.message ?? err);
+    return { ok: false as const, status: 502, key: cleanKey, error: 'Could not verify download file in R2' };
+  }
+}
 
 function hmac(key: Buffer | string, value: string) {
   return createHmac('sha256', key).update(value).digest();
