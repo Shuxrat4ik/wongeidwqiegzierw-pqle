@@ -117,9 +117,11 @@ function signingKey(secretAccessKey: string, date: string) {
 export function publicR2Url(key: string) {
   const config = getR2Config();
   if (!config.publicBaseUrl) return null;
-  // Remove leading slashes and strip any leading bucket name that might already be in the key
+  // Remove leading slashes and strip any nested bucket names that might already be in the key
   let cleanKey = key.replace(/^\/+/, '');
-  if (cleanKey.startsWith(`${config.bucket}/`)) {
+  // Strip bucket prefix if present (can appear multiple times due to malformed paths)
+  const bucketPrefix = `${config.bucket}/`;
+  while (cleanKey.startsWith(bucketPrefix)) {
     cleanKey = cleanKey.slice(config.bucket.length + 1);
   }
   return `${config.publicBaseUrl.replace(/\/+$/, '')}/${encodePath(cleanKey)}`;
@@ -135,9 +137,10 @@ export function createR2SignedUrl(key: string, expiresIn = 120) {
   const credential = `${config.accessKeyId}/${credentialScope}`;
   const safeExpires = Math.min(Math.max(Math.floor(expiresIn), 1), 604800);
   
-  // Remove leading slashes and strip any leading bucket name that might already be in the key
+  // Remove leading slashes and strip any nested bucket names that might already be in the key
   let cleanKey = key.replace(/^\/+/, '');
-  if (cleanKey.startsWith(`${config.bucket}/`)) {
+  const bucketPrefix = `${config.bucket}/`;
+  while (cleanKey.startsWith(bucketPrefix)) {
     cleanKey = cleanKey.slice(config.bucket.length + 1);
   }
   const encodedKey = encodePath(cleanKey);
