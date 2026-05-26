@@ -1,4 +1,5 @@
 // scripts/validate-env.js
+import 'dotenv/config';
 
 const requiredEnvVars = [
   "NEXT_PUBLIC_SUPABASE_URL",

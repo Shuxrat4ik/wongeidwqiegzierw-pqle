@@ -142,7 +142,8 @@ export function createR2SignedUrl(key: string, expiresIn = 120) {
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
     .sort()
     .join('&');
-  const canonicalUri = `/${config.bucket}/${encodedKey}`;
+  // const canonicalUri = `/${config.bucket}/${encodedKey}`;
+  const canonicalUri = `/${encodedKey}`;
   const canonicalRequest = [
     'GET',
     canonicalUri,
