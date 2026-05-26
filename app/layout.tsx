@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   title: 'NexusVault — PC Game Store',
   description: 'Discover, install, and play PC games with a modern storefront experience.',
   icons: {
-    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75" fill="%23fff">N</text></svg>',
+    icon: '/favicon.ico',
   },
 };
 
