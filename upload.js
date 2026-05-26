@@ -4,25 +4,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// 🔥 DEBUG
-console.log("R2 BUCKET:", process.env.R2_BUCKET);
-console.log("R2 ACCOUNT:", process.env.R2_ACCOUNT_ID);
-
-if (!process.env.R2_BUCKET) {
-  throw new Error("❌ R2_BUCKET topilmadi");
-}
-
-if (!process.env.R2_ACCOUNT_ID) {
-  throw new Error("❌ R2_ACCOUNT_ID topilmadi");
-}
-
-const filePath = "./file.zip";
-
-if (!fs.existsSync(filePath)) {
-  throw new Error("❌ file.zip topilmadi");
-}
-
-// 🔥 CLOUDFARE R2 S3 CLIENT (TO‘G‘RI)
 const client = new S3Client({
   region: "auto",
   endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
@@ -34,12 +15,12 @@ const client = new S3Client({
 });
 
 async function upload() {
-  const fileStream = fs.createReadStream(filePath);
+  const file = fs.createReadStream("./file.zip");
 
   const command = new PutObjectCommand({
     Bucket: process.env.R2_BUCKET,
     Key: "forza-horizon-5.zip",
-    Body: fileStream,
+    Body: file,
     ContentType: "application/zip",
   });
 
@@ -48,7 +29,7 @@ async function upload() {
     console.log("🔥 UPLOAD SUCCESS");
     console.log(res);
   } catch (err) {
-    console.error("❌ UPLOAD FAILED:");
+    console.error("❌ ERROR:");
     console.error(err);
   }
 }
