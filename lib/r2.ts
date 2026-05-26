@@ -176,9 +176,5 @@ export function createR2SignedUrl(key: string, expiresIn = 120) {
 
   params.set('X-Amz-Signature', signature);
 
-  console.log("DEBUG: host =", host);
-  console.log("DEBUG: canonicalUri =", canonicalUri);
-  console.log("DEBUG: bucket =", config.bucket);
-
   return `${config.endpoint}/${config.bucket}/${encodedKey}?${params.toString()}`;
 }
