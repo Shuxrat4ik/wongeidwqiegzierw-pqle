@@ -4,9 +4,6 @@ import { requireUser } from "@/lib/server/auth";
 import { apiError, handleServerError } from "@/lib/server/error-handler";
 import { createSignedGameDownload } from "@/lib/server/download-service";
 
-/**
- * Extract params safely
- */
 function getParams(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
 
@@ -16,74 +13,78 @@ function getParams(req: NextRequest) {
   };
 }
 
-/**
- * CORE LOGIC
- */
 async function handleDownload(
   req: NextRequest,
   userId: string,
   gameId?: string,
   slug?: string
 ) {
-  if (!gameId && !slug) {
-    return apiError("gameId or slug is required", 400);
-  }
-
-  // 🔥 SAFETY: Supabase client
-  const supabase = createServiceRoleClient();
-
-  let result;
   try {
-    result = await createSignedGameDownload(supabase, userId, {
+    if (!gameId && !slug) {
+      return apiError("gameId or slug is required", 400);
+    }
+
+    const supabase = createServiceRoleClient();
+
+    console.log("🔍 DOWNLOAD REQUEST:", { userId, gameId, slug });
+
+    const result = await createSignedGameDownload(supabase, userId, {
       gameId,
       slug,
     });
-  } catch (err) {
-    console.error("[SIGNED DOWNLOAD ERROR]", err);
-    return apiError("Failed to create download link", 500);
-  }
 
-  if (!result?.ok) {
-    console.log("[DOWNLOAD ERROR]", result?.error, { gameId, slug });
-    return apiError(result?.error || "Download failed", result?.status || 500);
-  }
+    console.log("📦 DOWNLOAD RESULT:", result);
 
-  return NextResponse.json({
-    success: true,
-    url: result.url,
-    expiresIn: result.expiresIn,
-    game: {
-      id: result.game?.id,
-      title: result.game?.title,
-      slug: result.game?.slug,
-    },
-  });
+    if (!result) {
+      return apiError("No response from download service", 500);
+    }
+
+    if (!result.ok) {
+      return apiError(result.error || "Download failed", result.status || 500);
+    }
+
+    if (!result.url) {
+      return apiError("Download URL not generated", 500);
+    }
+
+    return NextResponse.json({
+      success: true,
+      url: result.url,
+      expiresIn: result.expiresIn ?? null,
+      game: {
+        id: result.game?.id ?? null,
+        title: result.game?.title ?? null,
+        slug: result.game?.slug ?? null,
+      },
+    });
+  } catch (err: any) {
+    console.error("💥 HANDLE DOWNLOAD CRASH:", err);
+    return apiError(err?.message || "Internal error", 500);
+  }
 }
 
-/**
- * GET
- */
 export async function GET(req: NextRequest) {
   try {
-    const gate = await requireUser(req);
-    if (!gate.ok) return gate.response;
-
     const { gameId, slug } = getParams(req);
 
-    return await handleDownload(req, gate.user.id, gameId, slug);
+    // 🔥 authsiz ishlatamiz
+    const userId = "guest-user";
+
+    return await handleDownload(req, userId, gameId, slug);
   } catch (err) {
     console.error("[DOWNLOAD GET ERROR]", err);
     return handleServerError("api/download", err, { method: "GET" });
   }
 }
 
-/**
- * POST
- */
 export async function POST(req: NextRequest) {
   try {
     const gate = await requireUser(req);
-    if (!gate.ok) return gate.response;
+
+    if (!gate.ok) {
+      console.log("❌ AUTH FAILED");
+      return gate.response;
+    }
 
     let body: any;
 
