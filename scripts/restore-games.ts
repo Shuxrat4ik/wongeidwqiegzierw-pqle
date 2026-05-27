@@ -3,6 +3,8 @@ import { join } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import { TOP_GAME_SEEDS } from '../lib/top-games';
 
+const WebSocket = require('ws');
+
 function loadEnvFile(path: string) {
   if (!existsSync(path)) return;
   const text = readFileSync(path, 'utf8');
@@ -32,9 +34,16 @@ if (!url || !serviceKey) {
 
 const supabase = createClient(url, serviceKey, {
   auth: { persistSession: false, autoRefreshToken: false },
+  realtime: { transport: WebSocket },
 });
 
-const rows = TOP_GAME_SEEDS.map((game) => ({
+const restoreLimit = Number(process.env.RESTORE_GAMES_LIMIT ?? 200);
+const selectedGames = TOP_GAME_SEEDS.slice(
+  0,
+  Number.isFinite(restoreLimit) && restoreLimit > 0 ? restoreLimit : 200
+);
+
+const rows = selectedGames.map((game) => ({
   title: game.title,
   slug: game.slug,
   short_description: game.short_description,

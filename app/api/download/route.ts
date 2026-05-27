@@ -25,47 +25,51 @@ async function handleDownload(
 
   const supabase = createServiceRoleClient();
 
-  try {
-    const result = await createSignedGameDownload(supabase, userId, {
-      gameId,
-      slug,
-    });
+  const result = await createSignedGameDownload(supabase, userId, {
+    gameId,
+    slug,
+  });
 
-    if (!result?.ok) {
-      return apiError(result?.error || "Download failed", result?.status || 500);
-    }
-
-    return NextResponse.json({
-      success: true,
-      url: result.url,
-      expiresIn: result.expiresIn ?? null,
-      game: result.game
-        ? {
-            id: result.game.id,
-            title: result.game.title,
-            slug: result.game.slug,
-          }
-        : null,
-    });
-  } catch (err) {
-    console.error("💥 DOWNLOAD SERVICE ERROR:", err);
-    return apiError("Internal download error", 500);
+  if (!result?.ok) {
+    return apiError(result?.error || "Download failed", result?.status || 500);
   }
+
+  return NextResponse.json({
+    success: true,
+    url: result.url,
+    expiresIn: result.expiresIn ?? null,
+    game: result.game
+      ? {
+          id: result.game.id,
+          title: result.game.title,
+          slug: result.game.slug,
+        }
+      : null,
+  });
 }
 
+/**
+ * GET → AUTH REQUIRED
+ */
 export async function GET(req: NextRequest) {
   try {
+    const gate = await requireUser(req);
+
+    if (!gate.ok) {
+      return gate.response;
+    }
+
     const { gameId, slug } = getParams(req);
 
-    // ⚠️ guest mode (faqat public download uchun)
-    const userId = "guest-user";
-
-    return await handleDownload(req, userId, gameId, slug);
+    return await handleDownload(req, gate.user.id, gameId, slug);
   } catch (err) {
     return handleServerError("api/download", err, { method: "GET" });
   }
 }
 
+/**
+ * POST → AUTH REQUIRED
+ */
 export async function POST(req: NextRequest) {
   try {
     const gate = await requireUser(req);
@@ -74,15 +78,17 @@ export async function POST(req: NextRequest) {
       return gate.response;
     }
 
-    let body;
-    try {
-      body = await req.json();
-    } catch {
+    const body = await req.json().catch(() => null);
+
+    if (!body) {
       return apiError("Invalid JSON body", 400);
     }
 
-    const gameId = typeof body?.gameId === "string" ? body.gameId.trim() : undefined;
-    const slug = typeof body?.slug === "string" ? body.slug.trim() : undefined;
+    const gameId =
+      typeof body.gameId === "string" ? body.gameId.trim() : undefined;
+
+    const slug =
+      typeof body.slug === "string" ? body.slug.trim() : undefined;
 
     return await handleDownload(req, gate.user.id, gameId, slug);
   } catch (err) {

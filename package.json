@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1054.0",
+    "@aws-sdk/s3-request-presigner": "^3.1054.0",
     "@hookform/resolvers": "^3.9.0",
     "@opennextjs/cloudflare": "^1.19.11",
     "@radix-ui/react-accordion": "^1.2.0",
