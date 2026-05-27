@@ -1,13 +1,17 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import {
-  checkR2Object,
-  createR2SignedUrl,
-  publicR2Url,
-  validateR2Config,
-} from "@/lib/r2";
+import { S3Client, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { checkUserOwnsGame } from "@/lib/server/ownership";
 
 export const SIGNED_DOWNLOAD_TTL_SECONDS = 120;
+
+const b2 = new S3Client({
+  region: process.env.B2_REGION!,
+  endpoint: process.env.B2_ENDPOINT!,
+  credentials: {
+    accessKeyId: process.env.B2_KEY_ID!,
+    secretAccessKey: process.env.B2_APP_KEY!,
+  },
+});
 
 async function recordDownload(
   admin: SupabaseClient,
@@ -21,6 +25,20 @@ async function recordDownload(
 
   if (error) {
     console.warn("[download] could not record download:", error.message);
+  }
+}
+
+async function checkB2Object(key: string) {
+  try {
+    await b2.send(
+      new HeadObjectCommand({
+        Bucket: process.env.B2_BUCKET!,
+        Key: key,
+      })
+    );
+    return { ok: true };
+  } catch (e) {
+    return { ok: false };
   }
 }
 
@@ -40,8 +58,7 @@ export async function createSignedGameDownload(
     const { data: game, error: gameError } = await selector.maybeSingle();
 
     if (gameError) {
-      console.error("DB ERROR:", gameError);
-      return { ok: false, status: 502, error: "Could not load game data" };
+      return { ok: false, status: 502, error: "DB error" };
     }
 
     if (!game) {
@@ -56,7 +73,6 @@ export async function createSignedGameDownload(
       };
     }
 
-    // 🔥 ownership check
     const owned = await checkUserOwnsGame(admin, userId, game.id);
 
     if (!owned) {
@@ -66,20 +82,12 @@ export async function createSignedGameDownload(
         error:
           game.price > 0
             ? "You do not own this game"
-            : "Add this free game to your library first",
+            : "Add this free game first",
       };
     }
 
-    // 🔥 external download case
-    if (game.download_type === "drive" || game.download_type === "external") {
-      if (!game.download_url?.trim()) {
-        return {
-          ok: false,
-          status: 400,
-          error: "No download URL configured",
-        };
-      }
-
+    // 🔥 external link case
+    if (game.download_type === "external") {
       await recordDownload(admin, userId, game.id);
 
       return {
@@ -90,31 +98,20 @@ export async function createSignedGameDownload(
       };
     }
 
-    // 🔥 R2 FLOW
-    const path = game.download_path.trim().replace(/^\/+/, "");
+    // 🔥 B2 FLOW
+    const key = game.download_path.replace(/^\/+/, "");
 
-    const r2Check = validateR2Config();
-    if (!r2Check.ok) {
+    const exists = await checkB2Object(key);
+
+    if (!exists.ok) {
       return {
         ok: false,
-        status: 503,
-        error: "R2 config error: " + r2Check.error,
+        status: 404,
+        error: "File not found in storage",
       };
     }
 
-    const objectCheck = await checkR2Object(path);
-
-    if (!objectCheck.ok) {
-      return {
-        ok: false,
-        status: objectCheck.status,
-        error: "File not found in R2",
-      };
-    }
-
-    const publicUrl = publicR2Url(path);
-    const url =
-      publicUrl ?? createR2SignedUrl(path, SIGNED_DOWNLOAD_TTL_SECONDS);
+    const url = `${process.env.B2_ENDPOINT}/file/${process.env.B2_BUCKET}/${key}`;
 
     await recordDownload(admin, userId, game.id);
 
@@ -122,15 +119,15 @@ export async function createSignedGameDownload(
       ok: true,
       game,
       url,
-      expiresIn: publicUrl ? null : SIGNED_DOWNLOAD_TTL_SECONDS,
+      expiresIn: null,
     };
   } catch (err) {
-    console.error("FATAL DOWNLOAD ERROR:", err);
+    console.error("DOWNLOAD ERROR:", err);
 
     return {
       ok: false,
       status: 500,
-      error: "Internal download service error",
+      error: "Internal server error",
     };
   }
 }
