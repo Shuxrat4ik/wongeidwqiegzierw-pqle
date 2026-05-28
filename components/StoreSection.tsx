@@ -115,7 +115,7 @@ export default function StoreSection({
           ) : null}
         </div>
         <SectionActions
-          href={href}
+          href="/games"
           viewMoreLabel={viewMoreLabel}
           isLoading={isLoading}
           gamesCount={games.length}
