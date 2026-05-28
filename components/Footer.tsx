@@ -30,8 +30,8 @@ export default function Footer() {
 
   return (
     <footer className="border-t border-[#121212] bg-[#121212]">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 pb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mt-24 pb-12 border-t border-white/10 pt-10">
           {/* Brand */}
           <div>
             <div className="mb-5">
@@ -64,11 +64,11 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold text-sm mb-5 tracking-wide">Support</h3>
             <ul className="space-y-3">
-              <FooterLink href="/" label="Help Center" />
-              <FooterLink href="/" label="Refund Policy" />
-              <FooterLink href="/" label="Terms of Service" />
-              <FooterLink href="/" label="Privacy Policy" />
-              <FooterLink href="/" label="Contact Us" />
+              <FooterLink href="/help" label="Help Center" />
+              <FooterLink href="/refund" label="Refund Policy" />
+              <FooterLink href="/terms" label="Terms of Service" />
+              <FooterLink href="/privacy" label="Privacy Policy" />
+              <FooterLink href="/contuct" label="Contact Us" />
             </ul>
           </div>
 

@@ -22,7 +22,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ChevronLeft, ChevronRight, Filter, Gamepad2, Search, SlidersHorizontal, Sparkles, X } from 'lucide-react';
 
-const LIMIT = 48;
+const LIMIT = 50;
 const countFormatter = new Intl.NumberFormat('en-US');
 const PRICE_FILTERS = [
   { id: 'free', label: 'Free', minPrice: 0, maxPrice: 0 },
@@ -228,8 +228,8 @@ function GamesCatalogContent() {
       </section>
 
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-7 lg:grid-cols-[240px_minmax(0,1fr)]">
-          <aside className="hidden lg:block">
+        <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_280px]">
+          <aside className="hidden lg:block lg:order-2 lg:mt-12">
             <div className="overflow-hidden rounded-2xl border border-white/[0.13] bg-[#1f2025] text-white shadow-xl shadow-black/25">
               <div className="space-y-4 px-4 pb-5 pt-5">
                 <div className="flex items-center justify-between">
@@ -370,7 +370,7 @@ function GamesCatalogContent() {
             </div>
           </aside>
 
-          <main>
+          <main className="lg:order-1">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-slate-300">
@@ -499,7 +499,7 @@ function GamesCatalogContent() {
                 />
 
                 {totalPages > 1 && (
-                  <div className="mt-12 flex items-center justify-center gap-2">
+                  <div className="mt-10 flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
                     <button
                       onClick={() => handlePageChange(page - 1)}
                       disabled={page === 1}
