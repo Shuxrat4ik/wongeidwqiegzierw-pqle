@@ -53,7 +53,7 @@ export default function Footer() {
             <h3 className="text-white font-semibold text-sm mb-5 tracking-wide">Quick Links</h3>
             <ul className="space-y-3">
               <FooterLink href="/" label="Home" />
-              <FooterLink href="/" label="Store" />
+              <FooterLink href="/games" label="Store" />
               <FooterLink href="/wishlist" label="Wishlist" />
               <FooterLink href="/cart" label="Cart" />
               <FooterLink href="/library" label="Library" />
