@@ -146,6 +146,9 @@ function HomeContent() {
 
         <main className="min-w-0 flex-1">
           <section className="store-dashboard-hero mb-12">
+            <p style={{ color: "white", fontSize: "12px", marginBottom: "10px" }}>
+              Impact-Site-Verification: 69996f3c-e366-4eb7-9662-bcf219f580e5
+            </p>
             <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
               <Link href="/" className="flex items-center gap-2 text-2xl font-black uppercase leading-none tracking-tight text-[#0078f4]">
                 <ShoppingCart className="h-8 w-8" />
