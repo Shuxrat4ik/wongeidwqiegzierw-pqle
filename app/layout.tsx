@@ -32,6 +32,16 @@ export default function RootLayout({
           <Navbar />
           <MarketplaceShell />
 
+          <html lang="en">
+          <head>
+            <meta
+              name="impact-site-verification"
+              content="69996f3c-e366-4eb7-9662-bcf219f580e5"
+            />
+          </head>
+            <body>{children}</body>
+          </html>
+
           <main className="flex-1 pt-11 w-full h-full">
             {children}
           </main>
