@@ -102,13 +102,13 @@ export default function DownloadsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white">
+    <div className="store-control-page">
       <main className="mx-auto max-w-[1300px] px-4 py-10 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#3b82f6]">Launcher</p>
-            <h1 className="mt-2 text-3xl font-black sm:text-4xl">Downloads</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#a0a0a0]">
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-200/75">Launcher core</p>
+            <h1 className="mt-2 text-4xl font-black tracking-normal sm:text-5xl">Downloads</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/58">
               Manage installs, pause updates, remove queue items, and open games when they are ready.
             </p>
           </div>
@@ -130,29 +130,29 @@ export default function DownloadsPage() {
           ].map((item) => {
             const Icon = item.icon;
             return (
-              <div key={item.label} className="rounded-lg border border-white/10 bg-[#1a1a1a] p-5">
-                <Icon className="mb-4 h-5 w-5 text-[#3b82f6]" />
+              <div key={item.label} className="store-panel p-5">
+                <Icon className="mb-4 h-5 w-5 text-cyan-200" />
                 <div className="text-2xl font-black">{item.value}</div>
-                <div className="mt-1 text-sm text-[#a0a0a0]">{item.label}</div>
+                <div className="mt-1 text-sm text-white/55">{item.label}</div>
               </div>
             );
           })}
         </section>
 
-        <section className="mt-8 rounded-lg border border-white/10 bg-[#1a1a1a]">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 p-5">
+        <section className="store-panel mt-8 overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-cyan-200/10 p-5">
             <h2 className="text-xl font-black">Install queue</h2>
             <button type="button" onClick={startNextQueued} className="store-btn-secondary inline-flex items-center gap-2 text-sm">
               <Download className="h-4 w-4" /> Start next
             </button>
           </div>
-          <div className="divide-y divide-white/10">
+          <div className="divide-y divide-cyan-200/10">
             {queue.map((game, index) => (
-              <div key={`${game.id}-${index}`} className="grid gap-4 p-4 sm:grid-cols-[96px_minmax(0,1fr)_220px_140px] sm:items-center">
+              <div key={`${game.id}-${index}`} className="grid gap-4 p-4 transition hover:bg-cyan-300/[0.04] sm:grid-cols-[96px_minmax(0,1fr)_220px_140px] sm:items-center">
                 <img src={game.image} alt="" className="h-16 w-24 rounded-lg object-cover" />
                 <div className="min-w-0">
                   <h3 className="truncate font-bold">{game.title}</h3>
-                  <p className="mt-1 text-sm capitalize text-[#a0a0a0]">{game.status} · {game.sizeGb} GB</p>
+                  <p className="mt-1 text-sm capitalize text-white/55">{game.status} · {game.sizeGb} GB</p>
                 </div>
                 <div>
                   <div className="mb-2 flex items-center justify-between text-xs font-bold text-white/70">
@@ -160,12 +160,12 @@ export default function DownloadsPage() {
                     <span>{game.status === 'downloading' ? `${game.speed} MB/s` : game.status === 'ready' ? 'Installed' : 'Waiting'}</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                    <div className="h-full rounded-full bg-[#3b82f6] transition-all" style={{ width: `${game.progress}%` }} />
+                    <div className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-blue-400 to-fuchsia-400 transition-all" style={{ width: `${game.progress}%` }} />
                   </div>
                 </div>
                 <div className="flex items-center gap-2 sm:justify-end">
                   {game.status === 'ready' ? (
-                    <Link href="/library" className="rounded-lg bg-[#22c55e]/15 p-2 text-[#22c55e] transition hover:bg-[#22c55e]/25" aria-label="Open installed game">
+                    <Link href="/library" className="rounded-lg bg-emerald-400/15 p-2 text-emerald-300 transition hover:bg-emerald-400/25" aria-label="Open installed game">
                       <CheckCircle2 className="h-4 w-4" />
                     </Link>
                   ) : game.status === 'downloading' ? (
@@ -173,7 +173,7 @@ export default function DownloadsPage() {
                       <Pause className="h-4 w-4" />
                     </button>
                   ) : (
-                    <button type="button" onClick={() => startDownload(game.id)} className="rounded-lg bg-[#3b82f6] p-2 text-white transition hover:bg-[#2563eb]" aria-label="Start download">
+                    <button type="button" onClick={() => startDownload(game.id)} className="rounded-lg bg-cyan-400 p-2 text-black transition hover:bg-cyan-200" aria-label="Start download">
                       <Play className="h-4 w-4" />
                     </button>
                   )}

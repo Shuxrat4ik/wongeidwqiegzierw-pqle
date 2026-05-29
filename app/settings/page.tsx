@@ -81,13 +81,13 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white">
+    <div className="store-control-page">
       <main className="mx-auto max-w-[1100px] px-4 py-10 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#3b82f6]">Account</p>
-            <h1 className="mt-2 text-3xl font-black sm:text-4xl">Settings</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#a0a0a0]">
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-200/75">Account command</p>
+            <h1 className="mt-2 text-4xl font-black tracking-normal sm:text-5xl">Settings</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/58">
               Your launcher preferences are saved on this browser and applied when you come back.
             </p>
           </div>
@@ -102,37 +102,37 @@ export default function SettingsPage() {
         </div>
 
         <section className="mt-8 grid gap-4 md:grid-cols-3">
-          <div className="rounded-lg border border-white/10 bg-[#1a1a1a] p-5">
-            <User className="mb-4 h-5 w-5 text-[#3b82f6]" />
+          <div className="store-panel p-5">
+            <User className="mb-4 h-5 w-5 text-cyan-200" />
             <label className="text-sm font-bold" htmlFor="username">Display name</label>
             <input
               id="username"
               value={settings.username}
               onChange={(event) => update('username', event.target.value)}
-              className="mt-3 w-full rounded-lg border border-white/10 bg-[#121212] px-3 py-2 text-sm text-white outline-none transition focus:border-[#3b82f6]"
+              className="store-input mt-3 text-sm"
               placeholder="Player name"
             />
           </div>
-          <div className="rounded-lg border border-white/10 bg-[#1a1a1a] p-5">
-            <Globe2 className="mb-4 h-5 w-5 text-[#3b82f6]" />
+          <div className="store-panel p-5">
+            <Globe2 className="mb-4 h-5 w-5 text-cyan-200" />
             <label className="text-sm font-bold" htmlFor="region">Region</label>
             <select
               id="region"
               value={settings.region}
               onChange={(event) => update('region', event.target.value)}
-              className="mt-3 w-full rounded-lg border border-white/10 bg-[#121212] px-3 py-2 text-sm text-white outline-none transition focus:border-[#3b82f6]"
+              className="store-input mt-3 text-sm"
             >
               {['Malaysia', 'Uzbekistan', 'United States', 'India', 'Europe'].map(region => <option key={region}>{region}</option>)}
             </select>
           </div>
-          <div className="rounded-lg border border-white/10 bg-[#1a1a1a] p-5">
-            <Download className="mb-4 h-5 w-5 text-[#3b82f6]" />
+          <div className="store-panel p-5">
+            <Download className="mb-4 h-5 w-5 text-cyan-200" />
             <label className="text-sm font-bold" htmlFor="downloadFolder">Download folder</label>
             <input
               id="downloadFolder"
               value={settings.downloadFolder}
               onChange={(event) => update('downloadFolder', event.target.value)}
-              className="mt-3 w-full rounded-lg border border-white/10 bg-[#121212] px-3 py-2 text-sm text-white outline-none transition focus:border-[#3b82f6]"
+              className="store-input mt-3 text-sm"
             />
           </div>
         </section>
@@ -141,13 +141,13 @@ export default function SettingsPage() {
           {settingCards.map((item) => {
             const Icon = item.icon;
             return (
-              <section key={item.key} className="flex items-center gap-4 rounded-lg border border-white/10 bg-[#1a1a1a] p-5">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#3b82f6]/15 text-[#3b82f6]">
+              <section key={item.key} className="store-panel flex items-center gap-4 p-5">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-cyan-300/12 text-cyan-200">
                   <Icon className="h-5 w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <h2 className="font-bold">{item.title}</h2>
-                  <p className="mt-1 text-sm leading-5 text-[#a0a0a0]">{item.description}</p>
+                  <p className="mt-1 text-sm leading-5 text-white/55">{item.description}</p>
                 </div>
                 <Switch checked={settings[item.key]} onCheckedChange={(checked) => update(item.key, checked)} aria-label={item.title} />
               </section>
@@ -155,10 +155,10 @@ export default function SettingsPage() {
           })}
         </div>
 
-        <section className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-[#1a1a1a] p-5 text-sm text-[#a0a0a0]">
-          <span className="inline-flex items-center gap-2"><Check className="h-4 w-4 text-[#22c55e]" /> {enabledCount} preferences enabled</span>
+        <section className="store-panel mt-6 flex flex-wrap items-center justify-between gap-3 p-5 text-sm text-white/58">
+          <span className="inline-flex items-center gap-2"><Check className="h-4 w-4 text-emerald-300" /> {enabledCount} preferences enabled</span>
           <span>{savedAt ? `Saved at ${savedAt}` : 'Unsaved changes stay on this page until you save.'}</span>
-          <Link href="/profile" className="font-bold text-[#3b82f6] hover:text-[#60a5fa]">Open profile</Link>
+          <Link href="/profile" className="font-bold text-cyan-200 hover:text-white">Open profile</Link>
         </section>
       </main>
     </div>
