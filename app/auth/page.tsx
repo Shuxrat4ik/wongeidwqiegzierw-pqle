@@ -69,7 +69,7 @@ export default function AuthPage() {
         </div>
 
         {/* Form */}
-        <div className="bg-[#1a1a1a] rounded-2xl border border-white/5 p-6">
+        <div className="bg-[#080a12] rounded-2xl border border-white/5 p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
