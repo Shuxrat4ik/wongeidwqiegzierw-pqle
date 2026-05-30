@@ -2,6 +2,7 @@
   "name": "nextjs",
   "version": "0.1.0",
   "private": true,
+
   "scripts": {
     "build": "node scripts/validate-env.js && next build",
     "dev": "node scripts/validate-env.js && next dev",
