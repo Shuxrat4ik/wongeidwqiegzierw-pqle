@@ -38,6 +38,7 @@ export default function GameDetailPage() {
   const [reviewTitle, setReviewTitle] = useState('');
   const [reviewContent, setReviewContent] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
+  
 
   const fetchGame = useCallback(async () => {
     const gameRes = await supabase.from('games').select('*').eq('slug', slug).maybeSingle();

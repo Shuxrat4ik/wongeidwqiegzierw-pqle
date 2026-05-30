@@ -130,8 +130,8 @@ function DiscoverHomeContent() {
   }, [loadHomepage]);
 
   const lists = useMemo(() => {
-    const newestPool = newestGames.length > 0 ? newestGames : fallbackGames;
-    const salePool = saleGames.length > 0 ? saleGames : fallbackGames.filter((game) => game.discount_percent > 0);
+    const newestPool = newestGames;
+    const salePool = saleGames;
     const trending = uniqueGames(
       toFeaturedGames(trendingFeatured).length > 0 ? toFeaturedGames(trendingFeatured) : newestPool
     ).slice(0, 12);
@@ -160,11 +160,20 @@ function DiscoverHomeContent() {
 
   return (
     <div className="nexus-discover min-h-screen overflow-x-hidden bg-[#080a12] text-white">
-      {spotlight ? (
-        <DiscoverHero game={spotlight} onAddToCart={addToCart} isWishlisted={isWishlisted(spotlight.id)} onWishlist={toggleWishlist} />
-      ) : (
-        <DiscoverFallbackHero loading={loading} />
-      )}
+      {
+  loading ? (
+    <DiscoverFallbackHero loading={true} />
+  ) : spotlight ? (
+    <DiscoverHero
+      game={spotlight}
+      onAddToCart={addToCart}
+      isWishlisted={isWishlisted(spotlight.id)}
+      onWishlist={toggleWishlist}
+    />
+    ) : (
+    <DiscoverFallbackHero loading={false} />
+    )
+  } 
 
       <DiscoverMarquee games={uniqueGames([...lists.trending, ...lists.releases, ...lists.deals]).slice(0, 8)} />
 
@@ -212,13 +221,11 @@ function DiscoverHero({
         <img src={imageFor(game)} alt="" className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,#080a12_0%,rgba(8,10,18,.92)_32%,rgba(8,10,18,.56)_68%,rgba(8,10,18,.28)_100%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(0deg,#080a12_0%,rgba(8,10,18,.25)_48%,rgba(8,10,18,.65)_100%)]" />
-        <div className="nexus-grid absolute inset-0" />
       </motion.div>
 
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="nexus-glow nexus-glow-blue left-[-12rem] top-[14%]" />
         <div className="nexus-glow nexus-glow-violet bottom-[10%] right-[-10rem]" />
-        <div className="nexus-scan-line" />
       </div>
 
       <div className="relative mx-auto grid min-h-[calc(100svh-44px)] max-w-[1680px] items-center gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:px-8">
