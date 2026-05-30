@@ -27,8 +27,8 @@ const updates = [
 
 export default function NewsPage() {
   return (
-    <div className="min-h-screen bg-[#121212] text-white">
-      <section className="border-b border-white/10 bg-[#1a1a1a]">
+    <div className="min-h-screen bg-[#080a12] text-white">
+      <section className="border-b border-white/10 bg-[#080a12]">
         <div className="mx-auto max-w-[1500px] px-4 py-12 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#3b82f6]/15 text-[#3b82f6]">
@@ -47,7 +47,7 @@ export default function NewsPage() {
           {updates.map((item) => {
             const Icon = item.icon;
             return (
-              <article key={item.title} className="rounded-xl border border-white/10 bg-[#1f1f1f] p-5">
+              <article key={item.title} className="rounded-xl border border-white/10 bg-[#0B0F19] p-5">
                 <div className="mb-5 flex items-center justify-between">
                   <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase text-white/70">{item.tag}</span>
                   <Icon className="h-5 w-5 text-[#3b82f6]" />
@@ -69,7 +69,7 @@ export default function NewsPage() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {featured.map((game, index) => (
-              <Link key={`${game.id}-${game.slug}-${index}`} href={`/games/${game.slug}`} className="group overflow-hidden rounded-xl border border-white/10 bg-[#1f1f1f]">
+              <Link key={`${game.id}-${game.slug}-${index}`} href={`/games/${game.slug}`} className="group overflow-hidden rounded-xl border border-white/10 bg-[#0B0F19]">
                 <div className="relative aspect-video overflow-hidden">
                   <img src={game.banner_image || game.cover_image} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
                   <span className="absolute left-3 top-3 rounded-lg bg-[#3b82f6] px-2.5 py-1 text-xs font-black text-white">

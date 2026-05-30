@@ -14,7 +14,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#121212] text-white">
+      <div className="min-h-screen bg-[#080a12] text-white">
         <main className="mx-auto max-w-[760px] px-4 py-20 sm:px-6 lg:px-8">
           <section className="rounded-lg border border-white/10 bg-[#1a1a1a] p-8 text-center">
             <User className="mx-auto mb-4 h-12 w-12 text-[#3b82f6]" />
@@ -35,7 +35,7 @@ export default function ProfilePage() {
   const createdAt = profile?.created_at || user.created_at;
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white">
+    <div className="min-h-screen bg-[#080a12] text-white">
       <main className="mx-auto max-w-[1050px] px-4 py-10 sm:px-6 lg:px-8">
         <section className="overflow-hidden rounded-lg border border-white/10 bg-[#1a1a1a]">
           <div className="h-36 bg-[linear-gradient(135deg,#1f2937,#0f766e,#2563eb)]" />

@@ -29,7 +29,7 @@ export default function Footer() {
   }
 
   return (
-    <footer className="border-t border-[#121212] bg-[#121212]">
+    <footer className="border-t border-[#080a12] bg-[#080a12]">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 pb-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mt-24 pb-12 border-t border-white/10 pt-10">
           {/* Brand */}
@@ -82,7 +82,7 @@ export default function Footer() {
                 placeholder="your@email.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="flex-1 min-w-0 bg-[#1f1f1f] border border-[#2e2e2e] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder:text-[#757575] focus:outline-none focus:border-[#0078f4] focus:ring-1 focus:ring-[#0078f4]/30 transition-all"
+                className="flex-1 min-w-0 bg-[#080a12] border border-[#2e2e2e] rounded-lg px-3.5 py-2.5 text-sm text-white/70 placeholder:text-[#757575] focus:outline-none focus:border-[#0078f4] focus:ring-1 focus:ring-[#0078f4]/30 transition-all"
               />
               <button
                 type="submit"
@@ -123,7 +123,7 @@ function SocialLink({ href, icon, label }: { href: string; icon: React.ReactNode
       target="_blank"
       rel="noreferrer"
       aria-label={label}
-      className="w-9 h-9 rounded-lg bg-[#1f1f1f] border border-[#2e2e2e] flex items-center justify-center text-[#757575] hover:text-white hover:border-[#0078f4] hover:bg-[#0078f4]/10 transition-all duration-200"
+      className="w-9 h-9 rounded-lg bg-[#080a12] border border-[#2e2e2e] flex items-center justify-center text-cyan-400 text-white/70 hover:text-cyan-400 hover:border-[#0078f4] hover:bg-[#0078f4]/10 transition-all duration-200"
     >
       {icon}
     </a>

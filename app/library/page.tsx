@@ -103,7 +103,7 @@ export default function LibraryPage() {
         {items.length > 0 && (
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-            <input type="text" placeholder="Search library..." value={search} onChange={e => setSearch(e.target.value)} className="bg-[#1a1a1a] border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-500/50 w-64" />
+            <input type="text" placeholder="Search library..." value={search} onChange={e => setSearch(e.target.value)} className="bg-[#080a12] border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white/70 placeholder:text-slate-500 focus:outline-none focus:border-sky-500/50 w-64" />
           </div>
         )}
       </div>
@@ -117,7 +117,7 @@ export default function LibraryPage() {
       )}
 
       {items.length === 0 ? (
-        <div className="text-center py-24 rounded-2xl bg-[#1a1a1a] border border-white/5">
+        <div className="text-center py-24 rounded-2xl bg-[#0A0E17] border border-white/5">
           <Gamepad2 className="w-16 h-16 text-slate-700 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">Your library is empty</h2>
           <p className="text-slate-400 mb-6">Purchase or download free games to see them here</p>
@@ -132,7 +132,7 @@ export default function LibraryPage() {
             const isSeed = isSeedGameId(game.id);
             const stars = Math.round(game.rating);
             return (
-              <div key={`${id}-${game.id}-${index}`} className="bg-[#1a1a1a] rounded-xl border border-white/5 hover:border-sky-500/20 transition-colors overflow-hidden group game-card">
+              <div key={`${id}-${game.id}-${index}`} className="bg-[#0B0F19] rounded-xl border border-white/5 hover:border-sky-500/20 transition-colors overflow-hidden group game-card">
                 <div className="relative aspect-[16/9] overflow-hidden">
                   <img src={game.banner_image} alt={game.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="cover-gradient absolute inset-0" />

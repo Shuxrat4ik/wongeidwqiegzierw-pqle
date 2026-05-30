@@ -184,7 +184,7 @@ function GamesCatalogContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white">
+    <div className="min-h-screen bg-[#080a12] text-white">
       <section className="border-b border-[#2a2a2a]">
         <div className="relative mx-auto max-w-[1600px] px-4 py-12 sm:px-6 lg:px-8 lg:py-14">
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
@@ -230,7 +230,7 @@ function GamesCatalogContent() {
       <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_280px]">
           <aside className="hidden lg:block lg:order-2 lg:mt-12">
-            <div className="overflow-hidden rounded-2xl border border-white/[0.13] bg-[#1f2025] text-white shadow-xl shadow-black/25">
+            <div className="overflow-hidden rounded-2xl border border-white/[0.13] bg-[#0B0F19] text-white shadow-xl shadow-black/25">
               <div className="space-y-4 px-4 pb-5 pt-5">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-black tracking-tight">Filters ({activeFilterCount})</h2>

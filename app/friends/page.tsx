@@ -104,7 +104,7 @@ export default function FriendsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white">
+    <div className="min-h-screen bg-[#080a12] text-white">
       <main className="mx-auto max-w-[1180px] px-4 py-10 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>

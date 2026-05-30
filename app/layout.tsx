@@ -27,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`dark ${inter.variable} ${outfit.variable}`}>
-      <body className="min-h-screen bg-[#121212] flex flex-col font-sans antialiased">
+      <body className="min-h-screen bg-[#080a12] flex flex-col font-sans antialiased">
 
         <AuthProvider>
           <Navbar />

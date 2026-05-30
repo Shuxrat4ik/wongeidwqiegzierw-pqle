@@ -277,7 +277,7 @@ export default function WishlistPage() {
       )}
 
       {items.length === 0 ? (
-        <div className="text-center py-24 rounded-2xl bg-[#1a1a1a] border border-white/5">
+        <div className="text-center py-24 rounded-2xl bg-[#0A0E17] border border-white/5">
           <Heart className="w-16 h-16 text-slate-700 mx-auto mb-4" />
 
           <h2 className="text-xl font-bold text-white mb-2">

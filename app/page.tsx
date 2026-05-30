@@ -417,7 +417,7 @@ function TrendingRail({
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex snap-x gap-5 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div ref={scrollRef} className="flex snap-x gap-5 overflow-x-auto overflow-y-hidden py-2 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {loading && games.length === 0
           ? Array.from({ length: 6 }).map((_, index) => <div key={index} className="h-[420px] w-[280px] shrink-0 rounded-2xl bg-white/[0.06]" />)
           : games.map((game, index) => (
@@ -671,7 +671,7 @@ function LiveEvents({ games }: { games: Game[] }) {
 
         {(matches.length ? matches : games.slice(0, 3)).map((game, index) => (
           <Link key={game.id + '-event'} href={'/games/' + game.slug} className="nexus-match-card group">
-            <img src={coverFor(game)} alt="" className="absolute right-0 top-0 h-28 w-36 object-cover opacity-35 transition-opacity group-hover:opacity-55" />
+            <img src={coverFor(game)} alt="" className="absolute right-0 top-0 h-full w-500 object-contain object-left opacity-35 transition-opacity group-hover:opacity-55" />
             <div className="relative">
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase text-[#96a3bd]">NXS Pro League</span>
@@ -681,7 +681,7 @@ function LiveEvents({ games }: { games: Game[] }) {
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm font-black uppercase text-white">Team Void</span>
                 <span className="nexus-gradient-text text-2xl font-black">{index + 1} - {index}</span>
-                <span className="text-right text-sm font-black uppercase text-white">Pulse GG</span>
+                <span className="text-left text-sm font-black uppercase text-white">Pulse GG</span>
               </div>
             </div>
           </Link>
