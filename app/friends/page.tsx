@@ -134,15 +134,16 @@ export default function FriendsPage() {
               </div>
             </div>
 
-            <form onSubmit={addFriend} className="grid gap-3 border-b border-white/10 p-4 sm:grid-cols-[minmax(0,1fr)_auto]">
-              <div className="relative">
-                <UserPlus className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
-                <input
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Friend name"
-                  className="w-full rounded-lg border border-white/10 bg-[#121212] py-2 pl-9 pr-3 text-sm text-white outline-none transition focus:border-[#3b82f6]"
-                />
+            <form onSubmit={addFriend} className="grid items-center gap-3 border-b border-white/10 p-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+              <div className="relative flex items-center">
+                <UserPlus className="absolute left-3 h-4 w-4 text-white/40" />
+
+              <input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Friend name"
+                className="w-full rounded-lg border border-white/10 bg-[#121212] py-2 pl-9 pr-3 text-sm text-white outline-none transition focus:border-[#3b82f6] leading-none"
+              />
               </div>
               <button type="submit" className="store-btn-secondary inline-flex items-center justify-center gap-2">
                 <Plus className="h-4 w-4" /> Add friend
