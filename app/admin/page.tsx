@@ -10,3 +10,4 @@ const AdminPanel = dynamic(() => import("./AdminPanel"), {
 export default function Page() {
   return <AdminPanel />;
 }
+

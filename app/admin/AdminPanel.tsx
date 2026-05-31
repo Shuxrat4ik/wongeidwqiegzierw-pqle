@@ -57,8 +57,6 @@ function placementLabel(placement: string) {
   return placement;
 }
 
-
-
 export default function AdminPage() {
   const { user, profile, loading: authLoading } = useAuth();
   const router = useRouter();

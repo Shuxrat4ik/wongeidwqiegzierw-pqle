@@ -8,8 +8,5 @@ export const supabaseServer = createClient(
       persistSession: false,
       autoRefreshToken: false,
     },
-    global: {
-      fetch,
-    },
   }
 );
