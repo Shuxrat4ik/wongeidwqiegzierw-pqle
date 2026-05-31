@@ -118,7 +118,7 @@ export default function FriendsPage() {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
-          <section className="rounded-lg border border-white/10 bg-[#1a1a1a]">
+          <section className="rounded-lg border border-white/10 bg-[#080a12]">
             <div className="grid gap-3 border-b border-white/10 p-5 sm:grid-cols-[minmax(0,1fr)_260px]">
               <h2 className="flex items-center gap-2 text-xl font-black">
                 <Users className="h-5 w-5 text-[#3b82f6]" /> Friend list
@@ -129,7 +129,7 @@ export default function FriendsPage() {
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Search friends"
-                  className="w-full rounded-lg border border-white/10 bg-[#121212] py-2 pl-9 pr-3 text-sm text-white outline-none transition focus:border-[#3b82f6]"
+                  className="w-full rounded-lg border border-white/10 bg-[#080a12] py-2 pl-9 pr-3 text-sm text-white outline-none transition focus:border-[#3b82f6]"
                 />
               </div>
             </div>
@@ -142,7 +142,8 @@ export default function FriendsPage() {
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder="Friend name"
-                className="w-full rounded-lg border border-white/10 bg-[#121212] py-2 pl-9 pr-3 text-sm text-white outline-none transition focus:border-[#3b82f6] leading-none"
+                className="w-full rounded-lg border border-white/10 bg-[#080a12] py-2 pl-9 pr-3 text-sm text-white outline-none 
+                transition focus:border-[#3b82f6] leading-none"
               />
               </div>
               <button type="submit" className="store-btn-secondary inline-flex items-center justify-center gap-2">
@@ -170,7 +171,7 @@ export default function FriendsPage() {
             </div>
           </section>
 
-          <aside className="rounded-lg border border-white/10 bg-[#1f1f1f] p-5">
+          <aside className="rounded-lg border border-white/10 bg-[#080a12] p-5">
             <Radio className="mb-4 h-5 w-5 text-[#3b82f6]" />
             <h2 className="text-xl font-black">Party channel</h2>
             <div className="mt-4 space-y-3">
@@ -189,7 +190,7 @@ export default function FriendsPage() {
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
                 placeholder="Message party"
-                className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#121212] px-3 py-2 text-sm text-white outline-none transition focus:border-[#3b82f6]"
+                className="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#080a12] px-3 py-2 text-sm text-white outline-none transition focus:border-[#3b82f6]"
               />
               <button type="submit" className="rounded-lg bg-[#3b82f6] px-3 text-white transition hover:bg-[#2563eb]" aria-label="Send message">
                 <Send className="h-4 w-4" />
