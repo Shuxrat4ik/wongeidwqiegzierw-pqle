@@ -318,29 +318,6 @@ function DiscoverHero({
             </button>
           </div>
         </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 32, rotate: 1.5 }}
-          animate={{ opacity: 1, y: 0, rotate: 0 }}
-          transition={{ delay: 0.15, duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
-          className="nexus-hero-card hidden lg:block"
-        >
-          <Link href={'/games/' + game.slug} className="block overflow-hidden rounded-[18px]">
-            <img src={coverFor(game)} alt={game.title} className="nexus-crisp-image aspect-[3/4] w-full object-cover" />
-          </Link>
-          <div className="mt-5 grid grid-cols-3 gap-3">
-            {[
-              ['Rating', Number(game.rating || 4.8).toFixed(1)],
-              ['Genre', genreFor(game)],
-              ['Price', priceFor(game)],
-            ].map(([label, value]) => (
-              <div key={label} className="nexus-mini-stat">
-                <span>{label}</span>
-                <strong>{value}</strong>
-              </div>
-            ))}
-          </div>
-        </motion.div>
       </div>
     </section>
   );
