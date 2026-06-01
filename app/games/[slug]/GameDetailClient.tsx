@@ -678,7 +678,7 @@ export default function GameDetailPage() {
                 <h2 className="text-lg font-bold text-white mb-4 section-header">System Requirements</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {sysReq.minimum && (
-                    <div className="bg-[#1f1f1f] rounded-xl border border-[#3a3a3a] p-4">
+                    <div className="bg-[#080a12] rounded-xl border border-[#3a3a3a] p-4">
                       <h3 className="text-sm font-bold text-[#9e9e9e] mb-3">Minimum</h3>
                       <div className="space-y-2.5">
                         <ReqRow icon={<Monitor className="w-4 h-4 text-[#0078f4]" />} label="OS" value={sysReq.minimum.os} />
@@ -690,7 +690,7 @@ export default function GameDetailPage() {
                     </div>
                   )}
                   {sysReq.recommended && (
-                    <div className="bg-[#1f1f1f] rounded-xl border border-[#3a3a3a] p-4">
+                    <div className="bg-[#080a12] rounded-xl border border-[#3a3a3a] p-4">
                       <h3 className="text-sm font-bold text-[#0078f4] mb-3">Recommended</h3>
                       <div className="space-y-2.5">
                         <ReqRow icon={<Monitor className="w-4 h-4 text-[#0078f4]" />} label="OS" value={sysReq.recommended.os} />
