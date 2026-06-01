@@ -498,23 +498,7 @@ export default function GameDetailPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Banner */}
-      <div className="relative h-[450px] md:h-[660px] object-cover overflow-hidden">
-        <img src={game.banner_image} alt={game.title} className="w-full h-full object-cover" onError={e => { e.currentTarget.src = GAME_IMAGE_FALLBACK; }} />
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#121212] via-[#121212]/50 to-transparent" />
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-[#121212]/70 to-transparent" />
-        <div className="absolute top-6 left-6 z-20">
-          <button onClick={() => router.back()} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/40 backdrop-blur text-white/80 hover:text-white text-sm transition-colors border border-white/10">
-            <ArrowLeft className="w-4 h-4" /> Back
-          </button>
-        </div>
-        {game.trailer_url && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <button onClick={() => { setActiveTrailerIndex(-1); setShowTrailer(true); }} className="w-16 h-16 rounded-full bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all hover:scale-110">
-              <Play className="w-6 h-6 text-white fill-white ml-1" />
-            </button>
-          </div>
-        )}
+      <div className="relative h-[50px] md:h-[150px] object-cover overflow-hidden">
       </div>
 
       {/* Trailer Modal */}
