@@ -18,6 +18,9 @@ export const metadata: Metadata = {
     icon: '/favicon.svg',
     shortcut: '/favicon.ico',
   },
+  other: {
+    'impact-site-verification': '69996f3c-e366-4eb7-9662-bcf219f580e5',
+  },
 };
 
 export default function RootLayout({
@@ -28,18 +31,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${inter.variable} ${outfit.variable}`}>
       <body className="min-h-screen bg-[#080a12] flex flex-col font-sans antialiased">
-
         <AuthProvider>
           <Navbar />
           <MarketplaceShell />
 
-          {/* META HERE (to‘g‘ri yo‘l) */}
-          <meta
-            name="impact-site-verification"
-            content="69996f3c-e366-4eb7-9662-bcf219f580e5"
-          />
-
-          {/* ONLY ONCE */}
           <main className="flex-1 pt-11 w-full h-full">
             {children}
           </main>
@@ -47,7 +42,6 @@ export default function RootLayout({
           <Footer />
           <Toaster richColors position="bottom-right" />
         </AuthProvider>
-
       </body>
     </html>
   );
