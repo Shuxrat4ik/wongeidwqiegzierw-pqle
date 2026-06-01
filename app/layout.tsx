@@ -28,35 +28,27 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`dark ${inter.variable} ${outfit.variable}`}>
+      <head>
+        {/* META HERE (to'g'ri yo'l) */}
+        <meta
+          name="impact-site-verification"
+          content="69996f3c-e366-4eb7-9662-bcf219f580e5"
+        />
+      </head>
       <body className="min-h-screen bg-[#080a12] flex flex-col font-sans antialiased">
-
         <AuthProvider>
           <Navbar />
           <MarketplaceShell />
-
-          {/* META HERE (to‘g‘ri yo‘l) */}
-          <meta
-            name="impact-site-verification"
-            content="69996f3c-e366-4eb7-9662-bcf219f580e5"
-          />
 
           {/* ONLY ONCE */}
           <main className="flex-1 pt-11 w-full h-full">
             {children}
           </main>
 
-        <html lang="en">
-          <body>
-            {children}
-
-            <SpeedInsights />
-          </body>
-        </html>
-
           <Footer />
           <Toaster richColors position="bottom-right" />
         </AuthProvider>
-
+        <SpeedInsights />
       </body>
     </html>
   );
