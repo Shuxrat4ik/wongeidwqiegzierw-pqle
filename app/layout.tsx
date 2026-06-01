@@ -7,6 +7,7 @@ import Footer from '@/components/Footer';
 import MarketplaceShell from '@/components/MarketplaceShell';
 import { AuthProvider } from '@/lib/auth';
 import { Toaster } from '@/components/ui/sonner';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
@@ -34,6 +35,14 @@ export default function RootLayout({
         <AuthProvider>
           <Navbar />
           <MarketplaceShell />
+
+          <head>
+            <title>Next.js</title>
+          </head>
+          <body>
+            {children}
+            <SpeedInsights />
+          </body>
 
           <main className="flex-1 pt-11 w-full h-full">
             {children}
