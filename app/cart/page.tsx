@@ -123,18 +123,20 @@ export default function CartPage() {
         return;
       }
 
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.access_token ?? ''}`,
-        },
-        body: JSON.stringify({
-          items: newItems.map((i) => ({
-            gameId: i.game.id,
-          })),
-        }),
-      });
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session?.access_token ?? ''}`,
+    },
+    body: JSON.stringify({
+      items: newItems.map((i) => ({
+        gameId: i.game.id,
+        price: i.game.price, // 🔥 qo‘sh
+      })),
+        total_price: newItems.reduce((sum, i) => sum + i.game.price, 0), // 🔥 qo‘sh
+      }),
+    });
 
       const data = await res.json();
 
