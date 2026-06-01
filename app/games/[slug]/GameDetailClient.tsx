@@ -731,7 +731,7 @@ export default function GameDetailPage() {
                 <p className="text-slate-500 text-sm mb-4">Purchase this game to leave a review.</p>
               )}
               {user && (isOwned || isFree) && (
-                <div className="bg-[#1a1a1a] rounded-xl border border-white/5 p-4 mb-4">
+                <div className="bg-[#080a12] rounded-xl border border-white/5 p-4 mb-4">
                   <h3 className="text-sm font-bold text-white mb-3">Write a Review</h3>
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-sm text-slate-400">Rating:</span>
@@ -766,7 +766,7 @@ export default function GameDetailPage() {
                 </div>
               )}
               {!user && (
-                <div className="bg-[#1a1a1a] rounded-xl border border-white/5 p-4 mb-4 text-center">
+                <div className="bg-[#080a12] rounded-xl border border-white/5 p-4 mb-4 text-center">
                   <p className="text-slate-400 text-sm mb-2">Sign in to write a review</p>
                   <Link href="/auth" className="text-sky-400 hover:text-sky-300 text-sm font-medium">Sign In →</Link>
                 </div>
