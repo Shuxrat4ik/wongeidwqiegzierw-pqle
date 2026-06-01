@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jsonError, serverError } from '@/lib/server/http';
 import { clearSessionCookies, setSessionCookies } from '@/lib/server/session-cookies';
-import { createAnonServerClient } from '@/lib/server/supabase-server';
+import { supabaseAnon } from '@/lib/server/supabase-server';
 
 export async function POST(req: NextRequest) {
   try {
     const refreshToken = req.cookies.get('sb-refresh-token')?.value;
-    if (!refreshToken) return jsonError('Missing refresh token', 401);
 
-    const { data, error } = await createAnonServerClient().auth.refreshSession({
+    if (!refreshToken) {
+      return jsonError('Missing refresh token', 401);
+    }
+
+    const { data, error } = await supabaseAnon.auth.refreshSession({
       refresh_token: refreshToken,
     });
 
@@ -20,6 +23,7 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({ ok: true });
     setSessionCookies(res, data.session);
+
     return res;
   } catch (err) {
     return serverError('api/auth/refresh', err);

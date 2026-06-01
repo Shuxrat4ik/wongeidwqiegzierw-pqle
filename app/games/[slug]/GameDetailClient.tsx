@@ -551,10 +551,10 @@ export default function GameDetailPage() {
             </div>
 
             {/* Media Hub */}
-            <section className="overflow-hidden rounded-lg border border-[#3a3a3a] bg-[#1f1f1f] shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+            <section className="overflow-hidden rounded-lg border border-[#080a12] bg-[#080a12] shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
               <div className="flex flex-col gap-3 border-b border-[#080a12] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#0078f4]/20 bg-[#0078f4]/10">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#0078f4]/20 bg-[#080a12]/10">
                     <Images className="h-5 w-5 text-[#0078f4]" />
                   </div>
                   <div className="min-w-0">

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAnonServerClient } from "@/lib/server/supabase-server";
+import { supabaseAnon } from "@/lib/server/supabase-server";
 import { apiError, handleServerError } from "@/lib/server/error-handler";
 
 export async function GET(req: NextRequest) {
@@ -15,7 +15,8 @@ export async function GET(req: NextRequest) {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
-    const supabase = createAnonServerClient();
+    // ✅ to‘g‘ri client
+    const supabase = supabaseAnon;
 
     let query = supabase
       .from("games")
@@ -24,12 +25,14 @@ export async function GET(req: NextRequest) {
       .order("created_at", { ascending: false })
       .range(from, to);
 
+    // 🔍 Search filter
     if (search.length > 0) {
       query = query.or(
         `title.ilike.%${search}%,description.ilike.%${search}%`
       );
     }
 
+    // 🎮 Category filter
     if (category.length > 0) {
       query = query.contains("genre", [category]);
     }

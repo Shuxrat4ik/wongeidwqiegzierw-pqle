@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { jsonError, serverError } from '@/lib/server/http';
 import { rateLimit } from '@/lib/server/rate-limit';
 import { setSessionCookies } from '@/lib/server/session-cookies';
-import { createAnonServerClient } from '@/lib/server/supabase-server';
+import { supabaseAnon } from '@/lib/server/supabase-server';
 
 const LoginSchema = z.object({
   email: z.string().email(),
@@ -21,10 +21,17 @@ export async function POST(req: NextRequest) {
     }
 
     const parsed = LoginSchema.safeParse(await req.json().catch(() => null));
-    if (!parsed.success) return jsonError('Invalid email or password', 400);
+    if (!parsed.success) {
+      return jsonError('Invalid email or password', 400);
+    }
 
-    const supabase = createAnonServerClient();
-    const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
+    const supabase = supabaseAnon;
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: parsed.data.email,
+      password: parsed.data.password,
+    });
+
     if (error || !data.session || !data.user) {
       return jsonError('Invalid email or password', 401);
     }
@@ -35,7 +42,9 @@ export async function POST(req: NextRequest) {
         email: data.user.email,
       },
     });
+
     setSessionCookies(res, data.session);
+
     return res;
   } catch (err) {
     return serverError('api/auth/login', err);

@@ -5,19 +5,16 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
-  Calendar,
   Car,
   Check,
   ChevronLeft,
   ChevronRight,
   Crosshair,
-  Eye,
   Film,
   Gamepad2,
   Ghost,
   Globe2,
   Heart,
-  Play,
   ShoppingBag,
   ShoppingCart,
   Sparkles,
@@ -33,9 +30,9 @@ import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
 
 const FALLBACK_IMAGE =
-  'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1400&q=80';
+  'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=3840&q=95';
 
-const creatorNames = ['VoidByte', 'NeonValkyrie', 'PulseGGz', 'GhostRunner'];
+const HOMEPAGE_LOAD_TIMEOUT_MS = 2800;
 const fallbackGames = TOP_GAME_SEEDS.slice(0, 48) as unknown as Game[];
 
 function toFeaturedGames(rows: FeaturedGame[]): Game[] {
@@ -51,12 +48,52 @@ function uniqueGames(games: Game[]) {
   });
 }
 
+function enhanceImageUrl(src?: string, width = 3840) {
+  if (!src) return FALLBACK_IMAGE;
+  try {
+    const url = new URL(src);
+    if (url.hostname.includes('images.unsplash.com')) {
+      url.searchParams.set('auto', 'format');
+      url.searchParams.set('fit', 'crop');
+      url.searchParams.set('w', String(width));
+      url.searchParams.set('q', '95');
+      return url.toString();
+    }
+    return src;
+  } catch {
+    return src;
+  }
+}
+
+function bestSteamArt(game?: Game, patterns: string[] = []) {
+  for (const pattern of patterns) {
+    const match = game?.screenshots?.find((src) => src.includes(pattern));
+    if (match) return match;
+  }
+  return undefined;
+}
+
 function imageFor(game?: Game) {
-  return game?.banner_image || game?.cover_image || game?.screenshots?.[0] || FALLBACK_IMAGE;
+  return enhanceImageUrl(
+    bestSteamArt(game, ['library_hero', 'page_bg', 'header']) ||
+      game?.banner_image ||
+      game?.screenshots?.[0] ||
+      game?.cover_image
+  );
 }
 
 function coverFor(game?: Game) {
-  return game?.cover_image || game?.banner_image || game?.screenshots?.[0] || FALLBACK_IMAGE;
+  return enhanceImageUrl(game?.cover_image || game?.banner_image || game?.screenshots?.[0], 1800);
+}
+
+function landscapeFor(game?: Game) {
+  return enhanceImageUrl(
+    bestSteamArt(game, ['library_hero', 'page_bg', 'header', 'capsule_616x353']) ||
+      game?.banner_image ||
+      game?.screenshots?.[0] ||
+      game?.cover_image,
+    2200
+  );
 }
 
 function priceFor(game: Game) {
@@ -81,6 +118,12 @@ function wishlistFor(list: Game[], isWishlisted: (gameId: string) => boolean) {
   return new Set(list.filter((game) => isWishlisted(game.id)).map((game) => game.id));
 }
 
+function timeoutAfter(ms: number) {
+  return new Promise<never>((_, reject) => {
+    window.setTimeout(() => reject(new Error('Discover homepage request timed out')), ms);
+  });
+}
+
 function DiscoverHomeContent() {
   const { addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
@@ -95,31 +138,42 @@ function DiscoverHomeContent() {
   const loadHomepage = useCallback(async () => {
     setLoading(true);
     try {
-      const [trending, editorialNewReleases, editorialSales, newest, saleRes] = await Promise.all([
-        fetchFeaturedGames(supabase, 'trending'),
-        fetchFeaturedGames(supabase, 'new_release'),
-        fetchFeaturedGames(supabase, 'on_sale'),
-        fetchGames(supabase, { limit: 36, sortBy: 'newest' }),
-        supabase
-          .from('games')
-          .select('*')
-          .gt('discount_percent', 0)
-          .order('discount_percent', { ascending: false })
-          .limit(24),
+      const [trending, editorialNewReleases, editorialSales, newest, saleRes] = await Promise.race([
+        Promise.all([
+          fetchFeaturedGames(supabase, 'trending'),
+          fetchFeaturedGames(supabase, 'new_release'),
+          fetchFeaturedGames(supabase, 'on_sale'),
+          fetchGames(supabase, { limit: 36, sortBy: 'newest' }),
+          supabase
+            .from('games')
+            .select('*')
+            .gt('discount_percent', 0)
+            .order('discount_percent', { ascending: false })
+            .limit(24),
+        ]),
+        timeoutAfter(HOMEPAGE_LOAD_TIMEOUT_MS),
       ]);
+      const newestList = (newest as { games?: Game[] })?.games ?? [];
 
       setTrendingFeatured(trending);
       setNewReleaseFeatured(editorialNewReleases);
       setSaleFeatured(editorialSales);
-      setNewestGames((newest as { games?: Game[] })?.games ?? []);
+      setNewestGames(newestList.length > 0 ? newestList : fallbackGames);
 
       if (saleRes.data) {
         setSaleGames(
           saleRes.data.map((row) => normalizeDbGameRow(row as unknown as Record<string, unknown>) as Game)
         );
+      } else {
+        setSaleGames(fallbackGames.filter((game) => game.discount_percent > 0));
       }
     } catch (error) {
       console.error('Failed to load Discover homepage:', error);
+      setTrendingFeatured([]);
+      setNewReleaseFeatured([]);
+      setSaleFeatured([]);
+      setNewestGames(fallbackGames);
+      setSaleGames(fallbackGames.filter((game) => game.discount_percent > 0));
     } finally {
       setLoading(false);
     }
@@ -150,7 +204,6 @@ function DiscoverHomeContent() {
       deals,
       topSellers,
       categories: combined.slice(0, 8),
-      creators: combined.slice(0, 4),
       spotlight: trending[0] || releases[0] || deals[0] || newestPool[0],
     };
   }, [newReleaseFeatured, newestGames, saleFeatured, saleGames, trendingFeatured]);
@@ -160,20 +213,18 @@ function DiscoverHomeContent() {
 
   return (
     <div className="nexus-discover min-h-screen overflow-x-hidden bg-[#080a12] text-white">
-      {
-  loading ? (
-    <DiscoverFallbackHero loading={true} />
-  ) : spotlight ? (
-    <DiscoverHero
-      game={spotlight}
-      onAddToCart={addToCart}
-      isWishlisted={isWishlisted(spotlight.id)}
-      onWishlist={toggleWishlist}
-    />
-    ) : (
-    <DiscoverFallbackHero loading={false} />
-    )
-  } 
+      {loading ? (
+        <DiscoverHeroShell />
+      ) : spotlight ? (
+        <DiscoverHero
+          game={spotlight}
+          onAddToCart={addToCart}
+          isWishlisted={isWishlisted(spotlight.id)}
+          onWishlist={toggleWishlist}
+        />
+      ) : (
+        <DiscoverFallbackHero />
+      )}
 
       <DiscoverMarquee games={uniqueGames([...lists.trending, ...lists.releases, ...lists.deals]).slice(0, 8)} />
 
@@ -192,8 +243,6 @@ function DiscoverHomeContent() {
       <NewReleaseWall games={lists.releases} loading={loading} />
       <TopSellerBoard games={lists.topSellers} loading={loading} />
       <NexusPass deals={lists.deals} />
-      <LiveEvents games={lists.topSellers} />
-      <CreatorGrid games={lists.creators} />
       <CatalogCallout />
     </div>
   );
@@ -218,15 +267,10 @@ function DiscoverHero({
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
       >
-        <img src={imageFor(game)} alt="" className="h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,#080a12_0%,rgba(8,10,18,.92)_32%,rgba(8,10,18,.56)_68%,rgba(8,10,18,.28)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(0deg,#080a12_0%,rgba(8,10,18,.25)_48%,rgba(8,10,18,.65)_100%)]" />
+        <img src={imageFor(game)} alt="" className="nexus-crisp-image h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,#080a12_0%,rgba(8,10,18,.78)_31%,rgba(8,10,18,.34)_66%,rgba(8,10,18,.12)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(0deg,#080a12_0%,rgba(8,10,18,.12)_48%,rgba(8,10,18,.38)_100%)]" />
       </motion.div>
-
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="nexus-glow nexus-glow-blue left-[-12rem] top-[14%]" />
-        <div className="nexus-glow nexus-glow-violet bottom-[10%] right-[-10rem]" />
-      </div>
 
       <div className="relative mx-auto grid min-h-[calc(100svh-44px)] max-w-[1680px] items-center gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:px-8">
         <motion.div
@@ -236,7 +280,7 @@ function DiscoverHero({
           className="max-w-3xl"
         >
           <div className="nexus-pill mb-6">
-            <span className="nexus-live-dot" />
+            <span className="nexus-status-dot" />
             Featured Discover Drop
           </div>
 
@@ -282,7 +326,7 @@ function DiscoverHero({
           className="nexus-hero-card hidden lg:block"
         >
           <Link href={'/games/' + game.slug} className="block overflow-hidden rounded-[18px]">
-            <img src={coverFor(game)} alt={game.title} className="aspect-[3/4] w-full object-cover" />
+            <img src={coverFor(game)} alt={game.title} className="nexus-crisp-image aspect-[3/4] w-full object-cover" />
           </Link>
           <div className="mt-5 grid grid-cols-3 gap-3">
             {[
@@ -302,19 +346,36 @@ function DiscoverHero({
   );
 }
 
-function DiscoverFallbackHero({ loading }: { loading: boolean }) {
+function DiscoverHeroShell() {
+  return (
+    <section className="nexus-hero relative min-h-[calc(100svh-44px)] overflow-hidden bg-[#080a12]">
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_28%,rgba(47,140,255,.16),transparent_30rem),radial-gradient(circle_at_78%_18%,rgba(103,232,249,.1),transparent_28rem)]" />
+        <div className="nexus-grid absolute inset-0" />
+      </div>
+      <div className="relative mx-auto grid min-h-[calc(100svh-44px)] max-w-[1680px] items-center gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8">
+        <div className="max-w-3xl">
+          <div className="nexus-skeleton mb-6 h-8 w-44 rounded-full" />
+          <div className="nexus-skeleton h-16 w-full max-w-[34rem] rounded-xl sm:h-24" />
+          <div className="nexus-skeleton mt-4 h-16 w-full max-w-[38rem] rounded-xl opacity-70" />
+          <div className="mt-8 flex gap-3">
+            <div className="nexus-skeleton h-12 w-36 rounded-xl" />
+            <div className="nexus-skeleton h-12 w-32 rounded-xl opacity-70" />
+          </div>
+        </div>
+        <div className="nexus-skeleton hidden aspect-[3/4] rounded-[18px] lg:block" />
+      </div>
+    </section>
+  );
+}
+
+function DiscoverFallbackHero() {
   return (
     <section className="nexus-hero relative min-h-[calc(100svh-44px)] overflow-hidden">
       <div className="absolute inset-0">
-        <img src={FALLBACK_IMAGE} alt="" className="h-full w-full object-cover opacity-28" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,#080a12_0%,rgba(8,10,18,.9)_42%,rgba(8,10,18,.55)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(0deg,#080a12_0%,rgba(8,10,18,.2)_52%,rgba(8,10,18,.7)_100%)]" />
-        <div className="nexus-grid absolute inset-0" />
-      </div>
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="nexus-glow nexus-glow-blue left-[-12rem] top-[14%]" />
-        <div className="nexus-glow nexus-glow-violet bottom-[10%] right-[-10rem]" />
-        <div className="nexus-scan-line" />
+        <img src={FALLBACK_IMAGE} alt="" className="nexus-crisp-image h-full w-full object-cover opacity-55" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,#080a12_0%,rgba(8,10,18,.78)_42%,rgba(8,10,18,.32)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(0deg,#080a12_0%,rgba(8,10,18,.12)_52%,rgba(8,10,18,.38)_100%)]" />
       </div>
       <div className="relative mx-auto flex min-h-[calc(100svh-44px)] max-w-[1680px] items-center px-4 py-20 sm:px-6 lg:px-8">
         <motion.div
@@ -324,12 +385,11 @@ function DiscoverFallbackHero({ loading }: { loading: boolean }) {
           className="max-w-3xl"
         >
           <div className="nexus-pill mb-6">
-            <span className="nexus-live-dot" />
-            {loading ? 'Loading Project Games' : 'Project Catalog Ready'}
+            Project Catalog Ready
           </div>
           <h1 className="nexus-hero-title">NexusVault Discover</h1>
           <p className="mt-6 max-w-2xl text-base leading-7 text-[#c8d1e7] sm:text-lg">
-            Explore trending titles, categories, new releases, top sellers, deals, events, and creator picks from the Project game store.
+            Explore trending titles, categories, new releases, top sellers, and deals from the Project game store.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-3">
             <Link href="/games" className="nexus-btn-primary">
@@ -350,7 +410,7 @@ function DiscoverFallbackHero({ loading }: { loading: boolean }) {
 function DiscoverMarquee({ games }: { games: Game[] }) {
   const labels = games.length
     ? games.map((game) => game.title + ' · ' + (game.discount_percent > 0 ? '-' + game.discount_percent + '%' : priceFor(game)))
-    : ['NEXUSVAULT · DISCOVER', 'TOP PC GAMES · LIVE', 'WISHLIST DROPS · READY'];
+    : ['NEXUSVAULT · DISCOVER', 'TOP PC GAMES · DEALS', 'WISHLIST DROPS · READY'];
   const row = [...labels, ...labels];
 
   return (
@@ -411,7 +471,7 @@ function TrendingRail({
   };
 
   return (
-    <section className="mx-auto max-w-[1680px] px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+    <section className="mx-auto max-w-[1680px] px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
       <div className="flex items-end justify-between gap-4">
         <SectionHeader eyebrow={eyebrow} title={title} subtitle={subtitle} />
         <div className="mb-8 hidden shrink-0 items-center gap-2 sm:flex">
@@ -424,9 +484,9 @@ function TrendingRail({
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex snap-x gap-5 overflow-x-auto overflow-y-hidden py-2 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div ref={scrollRef} className="flex snap-x gap-4 overflow-x-auto overflow-y-hidden py-2 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {loading && games.length === 0
-          ? Array.from({ length: 6 }).map((_, index) => <div key={index} className="h-[420px] w-[280px] shrink-0 rounded-2xl bg-white/[0.06]" />)
+          ? Array.from({ length: 6 }).map((_, index) => <div key={index} className="h-[300px] w-[230px] shrink-0 rounded-xl bg-white/[0.06]" />)
           : games.map((game, index) => (
               <motion.article
                 key={game.id + '-' + index}
@@ -434,12 +494,12 @@ function TrendingRail({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-80px' }}
                 transition={{ duration: 0.45, delay: index * 0.04 }}
-                className="nexus-game-card group w-[260px] shrink-0 snap-start overflow-hidden rounded-2xl"
+                className="nexus-game-card group w-[230px] shrink-0 snap-start overflow-hidden rounded-xl"
               >
                 <Link href={'/games/' + game.slug} className="block">
-                  <div className="relative aspect-[4/5] overflow-hidden">
-                    <img src={coverFor(game)} alt={game.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0b1020] via-[#0b1020]/28 to-transparent" />
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <img src={landscapeFor(game)} alt={game.title} loading="lazy" decoding="async" className="nexus-crisp-image h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0b1020]/82 via-[#0b1020]/10 to-transparent" />
                     {game.discount_percent > 0 ? <div className="nexus-discount-badge">-{game.discount_percent}%</div> : null}
                     <div className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-md bg-black/55 px-2 py-1 text-xs font-bold backdrop-blur">
                       <Star className="h-3.5 w-3.5 fill-[#67e8f9] text-[#67e8f9]" />
@@ -447,7 +507,7 @@ function TrendingRail({
                     </div>
                   </div>
                 </Link>
-                <div className="p-5">
+                <div className="p-3">
                   <div className="mb-2 flex flex-wrap gap-1.5">
                     {(game.genre || []).slice(0, 2).map((tag) => (
                       <span key={tag} className="nexus-tag">
@@ -456,12 +516,12 @@ function TrendingRail({
                     ))}
                   </div>
                   <Link href={'/games/' + game.slug} className="block">
-                    <h3 className="line-clamp-2 min-h-[3.5rem] text-lg font-bold leading-7 text-white group-hover:text-[#67e8f9]">{game.title}</h3>
+                    <h3 className="line-clamp-2 min-h-[2.5rem] text-[0.95rem] font-bold leading-snug text-white group-hover:text-[#67e8f9]">{game.title}</h3>
                   </Link>
                   <div className="mt-4 flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       {game.discount_percent > 0 ? <div className="text-xs text-[#7d8aa5] line-through">{'$' + game.price.toFixed(2)}</div> : null}
-                      <div className="text-xl font-black text-[#67e8f9]">{priceFor(game)}</div>
+                      <div className="text-lg font-black text-[#67e8f9]">{priceFor(game)}</div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button type="button" onClick={() => onWishlist(game.id)} className="nexus-card-icon" aria-label="Wishlist">
@@ -491,9 +551,9 @@ function CategoryUniverse({ games }: { games: Game[] }) {
   }, [games]);
 
   return (
-    <section className="mx-auto max-w-[1680px] px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+    <section className="mx-auto max-w-[1680px] px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
       <SectionHeader eyebrow="Browse Universes" title="Popular Categories" subtitle="Find your next obsession across the Project catalog." />
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {categories.map(({ name, count, Icon }, index) => (
           <motion.div
             key={name}
@@ -518,9 +578,9 @@ function CategoryUniverse({ games }: { games: Game[] }) {
 
 function NewReleaseWall({ games, loading }: { games: Game[]; loading: boolean }) {
   return (
-    <section className="mx-auto max-w-[1680px] px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+    <section className="mx-auto max-w-[1680px] px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
       <SectionHeader eyebrow="Just Dropped" title="New Releases" subtitle="Fresh worlds added to the store recently." />
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
         {loading && games.length === 0
           ? Array.from({ length: 6 }).map((_, index) => <div key={index} className="aspect-[3/4] rounded-xl bg-white/[0.06]" />)
           : games.slice(0, 6).map((game, index) => (
@@ -532,10 +592,10 @@ function NewReleaseWall({ games, loading }: { games: Game[]; loading: boolean })
                 transition={{ duration: 0.35, delay: index * 0.05 }}
               >
                 <Link href={'/games/' + game.slug} className="nexus-release-card group">
-                  <img src={coverFor(game)} alt={game.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#080a12] via-[#080a12]/26 to-transparent" />
+                  <img src={coverFor(game)} alt={game.title} loading="lazy" decoding="async" className="nexus-crisp-image h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#080a12]/82 via-[#080a12]/10 to-transparent" />
                   <div className="absolute left-3 top-3 flex flex-col gap-1.5">
-                    <span className="nexus-live-badge"><span />Live</span>
+                    <span className="nexus-news-badge"><span />News</span>
                     {game.discount_percent > 0 ? <span className="nexus-cyan-badge">-{game.discount_percent}%</span> : null}
                   </div>
                   <div className="absolute inset-x-0 bottom-0 p-3">
@@ -552,7 +612,7 @@ function NewReleaseWall({ games, loading }: { games: Game[]; loading: boolean })
 
 function TopSellerBoard({ games, loading }: { games: Game[]; loading: boolean }) {
   return (
-    <section className="mx-auto max-w-[1680px] px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+    <section className="mx-auto max-w-[1680px] px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
       <SectionHeader eyebrow="Leaderboard" title="Top Sellers" subtitle="Highly rated Project titles players keep coming back to." />
       <div className="space-y-3">
         {loading && games.length === 0
@@ -570,7 +630,7 @@ function TopSellerBoard({ games, loading }: { games: Game[]; loading: boolean })
                     <span className="nexus-gradient-text">{String(index + 1).padStart(2, '0')}</span>
                   </div>
                   <div className="h-16 w-24 shrink-0 overflow-hidden rounded-lg sm:h-20 sm:w-32">
-                    <img src={coverFor(game)} alt={game.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <img src={landscapeFor(game)} alt={game.title} loading="lazy" decoding="async" className="nexus-crisp-image h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="truncate text-base font-bold text-white sm:text-xl">{game.title}</h3>
@@ -600,7 +660,7 @@ function NexusPass({ deals }: { deals: Game[] }) {
   const deal = deals[0];
 
   return (
-    <section className="mx-auto max-w-[1680px] px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+    <section className="mx-auto max-w-[1680px] px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
       <div className="nexus-pass relative overflow-hidden rounded-3xl p-8 sm:p-10 lg:p-16">
         <div className="relative grid gap-10 lg:grid-cols-2 lg:items-center">
           <div>
@@ -636,93 +696,6 @@ function NexusPass({ deals }: { deals: Game[] }) {
             ))}
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
-
-function LiveEvents({ games }: { games: Game[] }) {
-  const featured = games[0];
-  const matches = games.slice(1, 4);
-
-  return (
-    <section className="mx-auto max-w-[1680px] px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
-      <SectionHeader eyebrow="Esports HQ" title="Live Events & Tournaments" subtitle="A Nexus-style events layer using Project game artwork." />
-      <div className="grid gap-5 lg:grid-cols-3">
-        <div className="nexus-event-feature lg:row-span-2">
-          {featured ? <img src={imageFor(featured)} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30" /> : null}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#101626] via-[#101626]/82 to-transparent" />
-          <div className="relative flex min-h-[420px] flex-col p-7">
-            <div className="nexus-pill mb-6"><Trophy className="h-3.5 w-3.5" /> Championship</div>
-            <h3 className="text-4xl font-black leading-tight text-white lg:text-5xl">NEXUS WORLD<br />FINALS 2026</h3>
-            <p className="mt-3 text-[#aebbd4]">Top squads, Project catalog showcases, and live streams from one Discover hub.</p>
-            <div className="mt-8 grid grid-cols-4 gap-2">
-              {[
-                ['DAYS', '01'],
-                ['HRS', '14'],
-                ['MIN', '38'],
-                ['SEC', '47'],
-              ].map(([label, value]) => (
-                <div key={label} className="nexus-count">
-                  <strong>{value}</strong>
-                  <span>{label}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-auto flex flex-wrap gap-3 pt-8">
-              <Link href="/news" className="nexus-btn-primary">Reserve seat</Link>
-              <Link href="/library" className="nexus-btn-secondary"><Calendar className="h-4 w-4" />Schedule</Link>
-            </div>
-          </div>
-        </div>
-
-        {(matches.length ? matches : games.slice(0, 3)).map((game, index) => (
-          <Link key={game.id + '-event'} href={'/games/' + game.slug} className="nexus-match-card group">
-            <img src={coverFor(game)} alt="" className="absolute right-0 top-0 h-full w-500 object-contain object-left opacity-35 transition-opacity group-hover:opacity-55" />
-            <div className="relative">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase text-[#96a3bd]">NXS Pro League</span>
-                <span className={index % 2 === 0 ? 'nexus-live-badge' : 'nexus-upcoming-badge'}><span />{index % 2 === 0 ? 'Live' : 'Upcoming'}</span>
-              </div>
-              <h4 className="mb-5 text-lg font-bold text-white">{game.title}</h4>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm font-black uppercase text-white">Team Void</span>
-                <span className="nexus-gradient-text text-2xl font-black">{index + 1} - {index}</span>
-                <span className="text-left text-sm font-black uppercase text-white">Pulse GG</span>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function CreatorGrid({ games }: { games: Game[] }) {
-  return (
-    <section className="mx-auto max-w-[1680px] px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
-      <SectionHeader eyebrow="Now Streaming" title="Featured Creators" subtitle="Drop in on gameplay and discovery sessions tied to store games." />
-      <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
-        {games.map((game, index) => (
-          <Link key={game.id + '-creator'} href={'/games/' + game.slug} className="nexus-creator-card group">
-            <img src={coverFor(game)} alt={game.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#080a12] via-[#080a12]/34 to-transparent" />
-            <div className="absolute left-3 top-3 flex flex-col gap-1.5">
-              <span className="nexus-live-badge"><span />Live</span>
-              <span className="inline-flex w-fit items-center gap-1 rounded bg-black/45 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur">
-                <Eye className="h-3 w-3" />{Math.round((game.review_count || 42000) / 1000)}K
-              </span>
-            </div>
-            <div className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-[#2f8cff] to-[#b56cff] opacity-0 transition-opacity group-hover:opacity-100">
-              <Play className="h-3.5 w-3.5 fill-white text-white" />
-            </div>
-            <div className="absolute inset-x-0 bottom-0 p-4">
-              <div className="mb-1 text-[10px] font-black uppercase text-[#67e8f9]">{game.title}</div>
-              <div className="text-lg font-bold text-white">{creatorNames[index % creatorNames.length]}</div>
-              <span className="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-white/12 bg-white/8 py-2 text-xs font-black uppercase text-white">Follow</span>
-            </div>
-          </Link>
-        ))}
       </div>
     </section>
   );

@@ -1934,32 +1934,15 @@ nav.fixed {
   mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
 }
 
-.nexus-glow {
-  position: absolute;
-  width: min(46vw, 560px);
-  height: min(46vw, 560px);
-  border-radius: 999px;
-  filter: blur(100px);
-  opacity: 0.35;
-  animation: nexus-glow 3.8s ease-in-out infinite;
-}
-
-.nexus-glow-blue { background: var(--nexus-blue); }
-.nexus-glow-violet { background: var(--nexus-violet); animation-delay: 1.2s; }
-
-.nexus-scan-line {
-  position: absolute;
-  inset-inline: 0;
-  top: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--nexus-cyan), transparent);
-  opacity: 0.25;
-  animation: nexus-scan 4.5s linear infinite;
+.nexus-crisp-image {
+  backface-visibility: hidden;
+  filter: saturate(1.08) contrast(1.06);
+  image-rendering: auto;
+  transform: translateZ(0);
 }
 
 .nexus-pill,
-.nexus-live-badge,
-.nexus-upcoming-badge,
+.nexus-news-badge,
 .nexus-cyan-badge {
   display: inline-flex;
   width: fit-content;
@@ -1976,32 +1959,23 @@ nav.fixed {
   backdrop-filter: blur(18px);
 }
 
-.nexus-live-dot,
-.nexus-live-badge span {
+.nexus-status-dot,
+.nexus-news-badge span {
   width: 0.4rem;
   height: 0.4rem;
   border-radius: 999px;
-  background: var(--nexus-pink);
+  background: var(--nexus-cyan);
   box-shadow: 0 0 14px currentColor;
   animation: nexus-pulse 1.5s ease-in-out infinite;
 }
 
-.nexus-live-badge {
+.nexus-news-badge {
   border-radius: 0.35rem;
-  background: rgba(255, 79, 154, 0.9);
-  color: #fff;
+  background: rgba(103, 232, 249, 0.14);
+  color: var(--nexus-cyan);
   padding: 0.2rem 0.45rem;
   font-size: 0.62rem;
 }
-
-.nexus-upcoming-badge {
-  border-radius: 0.35rem;
-  color: #cbd5e1;
-  padding: 0.2rem 0.45rem;
-  font-size: 0.62rem;
-}
-
-.nexus-upcoming-badge span { display: none; }
 
 .nexus-cyan-badge {
   border-radius: 0.35rem;
@@ -2074,9 +2048,6 @@ nav.fixed {
 .nexus-category-card,
 .nexus-seller-row,
 .nexus-pass,
-.nexus-event-feature,
-.nexus-match-card,
-.nexus-creator-card,
 .nexus-catalog-callout {
   border: 1px solid var(--nexus-border);
   background: var(--nexus-card);
@@ -2089,16 +2060,14 @@ nav.fixed {
   padding: 1rem;
 }
 
-.nexus-mini-stat,
-.nexus-count {
+.nexus-mini-stat {
   border: 1px solid var(--nexus-border);
   border-radius: 0.75rem;
   background: rgba(255, 255, 255, 0.06);
   padding: 0.75rem;
 }
 
-.nexus-mini-stat span,
-.nexus-count span {
+.nexus-mini-stat span {
   display: block;
   font-size: 0.62rem;
   font-weight: 900;
@@ -2106,8 +2075,7 @@ nav.fixed {
   color: #8d9ab4;
 }
 
-.nexus-mini-stat strong,
-.nexus-count strong {
+.nexus-mini-stat strong {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2118,6 +2086,22 @@ nav.fixed {
 .nexus-marquee {
   width: max-content;
   animation: nexus-marquee 42s linear infinite;
+}
+
+.nexus-skeleton {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.nexus-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(103, 232, 249, 0.16), transparent);
+  animation: nexus-shimmer 1.35s ease-in-out infinite;
 }
 
 .nexus-discount-badge {
@@ -2146,11 +2130,11 @@ nav.fixed {
 .nexus-category-card {
   position: relative;
   display: flex;
-  min-height: 12rem;
+  min-height: 9.5rem;
   flex-direction: column;
   overflow: hidden;
-  border-radius: 1rem;
-  padding: 1.35rem;
+  border-radius: 0.85rem;
+  padding: 1rem;
 }
 
 .nexus-category-card::before {
@@ -2168,16 +2152,15 @@ nav.fixed {
 .nexus-category-icon,
 .nexus-check {
   display: grid;
-  width: 3rem;
-  height: 3rem;
+  width: 2.5rem;
+  height: 2.5rem;
   place-items: center;
-  border-radius: 0.8rem;
+  border-radius: 0.7rem;
   background: linear-gradient(135deg, rgba(47, 140, 255, 0.95), rgba(181, 108, 255, 0.95));
   color: #fff;
 }
 
-.nexus-release-card,
-.nexus-creator-card {
+.nexus-release-card {
   position: relative;
   display: block;
   aspect-ratio: 3 / 4;
@@ -2229,28 +2212,6 @@ nav.fixed {
   flex: 0 0 auto;
 }
 
-.nexus-event-feature,
-.nexus-match-card {
-  position: relative;
-  overflow: hidden;
-  border-radius: 1rem;
-}
-
-.nexus-match-card {
-  min-height: 12.5rem;
-  padding: 1.25rem;
-}
-
-.nexus-count {
-  text-align: center;
-  padding: 0.75rem 0.35rem;
-}
-
-.nexus-count strong {
-  font-size: clamp(1.25rem, 4vw, 1.9rem);
-  color: var(--nexus-cyan);
-}
-
 .nexus-catalog-callout {
   position: relative;
   overflow: hidden;
@@ -2266,14 +2227,8 @@ nav.fixed {
   to { transform: translateX(-50%); }
 }
 
-@keyframes nexus-glow {
-  0%, 100% { opacity: 0.26; transform: scale(1); }
-  50% { opacity: 0.48; transform: scale(1.08); }
-}
-
-@keyframes nexus-scan {
-  from { transform: translateY(-20vh); }
-  to { transform: translateY(120vh); }
+@keyframes nexus-shimmer {
+  100% { transform: translateX(100%); }
 }
 
 @keyframes nexus-pulse {
@@ -2294,4 +2249,3 @@ nav.fixed {
     padding: 2.25rem 1.25rem;
   }
 }
-

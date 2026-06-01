@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { clearSessionCookies } from '@/lib/server/session-cookies';
-import { createAnonServerClient } from '@/lib/server/supabase-server';
+import { supabaseAnon } from '@/lib/server/supabase-server';
 
 export async function POST(req: NextRequest) {
-  const refreshToken = req.cookies.get('sb-refresh-token')?.value;
-  if (refreshToken) {
-    await createAnonServerClient().auth.signOut().catch(() => undefined);
-  }
+  try {
+    const refreshToken = req.cookies.get('sb-refresh-token')?.value;
 
-  const res = NextResponse.json({ ok: true });
-  clearSessionCookies(res);
-  return res;
+    // 🔐 Supabase logout (agar session bo‘lsa)
+    if (refreshToken) {
+      await supabaseAnon.auth.signOut().catch(() => undefined);
+    }
+
+    // 🍪 Cookie tozalash
+    const res = NextResponse.json({ ok: true });
+    clearSessionCookies(res);
+
+    return res;
+  } catch (err) {
+    return NextResponse.json({ error: 'Logout failed' }, { status: 500 });
+  }
 }
