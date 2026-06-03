@@ -14,6 +14,14 @@
 - [ ] `CLOUDFLARE_R2_SECRET_ACCESS_KEY` - R2 secret key (not a URL)
 - [ ] `CLOUDFLARE_R2_BUCKET` - R2 bucket name
 - [ ] `NEXT_PUBLIC_APP_URL` - Application base URL (no trailing slash)
+- [ ] `NEXT_PUBLIC_AFFILIATE_URL` or `NEXT_PUBLIC_AFFILIATE_URL_TEMPLATE` - Optional Buy Now affiliate redirect
+
+Affiliate examples:
+
+```env
+NEXT_PUBLIC_AFFILIATE_URL=https://partner.example.com/buy?ref=nexusvault
+NEXT_PUBLIC_AFFILIATE_URL_TEMPLATE=https://partner.example.com/games/{slug}?ref=nexusvault
+```
 - [ ] `CLOUDFLARE_R2_PUBLIC_URL` - Optional, only if R2 bucket is public
 
 ### Run Validation

@@ -54,6 +54,7 @@ export type Game = {
   review_count: number;
   price: number;
   discount_percent: number;
+  affiliate_url?: string | null;
   download_url: string | null;
   download_path?: string | null;
   system_requirements: SystemRequirements;

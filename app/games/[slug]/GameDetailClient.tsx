@@ -15,6 +15,7 @@ import { toYouTubeEmbedUrl } from '@/lib/media';
 import { claimFreeGame, claimFreeGameAndDownload, startVerifiedDownload } from '@/lib/game-download-client';
 import { isDatabaseGameId } from '@/lib/game-id';
 import { addSeedToCollection, isSeedInCollection, openGameSite, readSeedCollection, toggleSeedWishlist } from '@/lib/game-collections';
+import { getAffiliateUrl } from '@/lib/affiliate';
 
 
 export default function GameDetailPage() {
@@ -329,6 +330,12 @@ export default function GameDetailPage() {
 
   async function buyNow() {
   if (!game || isOwned) return;
+
+  const affiliateUrl = getAffiliateUrl(game);
+  if (affiliateUrl) {
+    window.location.href = affiliateUrl;
+    return;
+  }
 
   if (!user) {
     toast.error('Sign in to buy this game');
