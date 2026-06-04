@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+const dotenv = require("dotenv");
 
 dotenv.config({ path: ".env" });
 dotenv.config({ path: ".env.local", override: true });
@@ -8,9 +8,6 @@ const requiredEnvGroups = [
   ["NEXT_PUBLIC_SUPABASE_ANON_KEY"],
   ["SUPABASE_SERVICE_ROLE_KEY"],
   ["NEXT_PUBLIC_APP_URL"],
-  ["STRIPE_SECRET_KEY"],
-  ["NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"],
-  ["STRIPE_WEBHOOK_SECRET"],
 
   ["B2_KEY_ID", "AWS_ACCESS_KEY_ID"],
   ["B2_APP_KEY", "AWS_SECRET_ACCESS_KEY"],

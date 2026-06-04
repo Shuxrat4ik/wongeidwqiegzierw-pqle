@@ -40,6 +40,14 @@ function isValidUrl(value: string) {
   }
 }
 
+function isHttpUrl(value: string) {
+  return value.trim().length > 0 && isValidUrl(value);
+}
+
+function looksLikeHttpUrl(value: string) {
+  return /^https?:\/\//i.test(value.trim());
+}
+
 function toNumber(value: unknown, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
@@ -100,6 +108,7 @@ export default function AdminPage() {
   const [formPlatform, setFormPlatform] = useState('Windows');
   const [formRating, setFormRating] = useState('4.0');
   const [formTags, setFormTags] = useState('');
+  const [formAffiliateUrl, setFormAffiliateUrl] = useState('');
   const [formDownloadUrl, setFormDownloadUrl] = useState('');
   const [formGameFile, setFormGameFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
@@ -344,13 +353,16 @@ export default function AdminPage() {
     if (formTrailer.trim() && !isValidUrl(formTrailer)) errors.trailer_url = 'Enter a valid trailer URL';
     const invalidVideos = parseList(formVideos).find(item => !isValidUrl(item));
     if (invalidVideos) errors.videos = 'Every video URL must be a valid URL';
-    if (formDownloadUrl.trim() && /^https?:\/\//i.test(formDownloadUrl)) errors.download_url = 'Use a private storage path, not a public URL';
+    if (formAffiliateUrl.trim() && !isValidUrl(formAffiliateUrl)) errors.affiliate_url = 'Enter a valid affiliate URL';
+    if (looksLikeHttpUrl(formDownloadUrl) && !isValidUrl(formDownloadUrl)) errors.download_url = 'Enter a valid download or affiliate URL';
     if (!formGenre.trim()) errors.genre = 'At least one genre is required';
     const price = parseFloat(formPrice);
     if (isNaN(price) || price < 0) errors.price = 'Price must be 0 or greater';
     const discount = parseInt(formDiscount);
     if (isNaN(discount) || discount < 0 || discount > 100) errors.discount_percent = 'Discount must be 0-100';
-    if (!formDownloadUrl.trim() && !formGameFile) errors.download_url = 'Upload a private installer or provide a storage path';
+    if (!formAffiliateUrl.trim() && !formDownloadUrl.trim() && !formGameFile) {
+      errors.affiliate_url = 'Add an affiliate URL or configure a private download';
+    }
     const rating = parseFloat(formRating);
     if (isNaN(rating) || rating < 1 || rating > 5) errors.rating = 'Rating must be 1.0-5.0';
     if (parseList(formPlatform).length === 0) errors.platform = 'At least one platform is required';
@@ -370,7 +382,8 @@ export default function AdminPage() {
     setFormVideos((game.videos ?? []).join(', '));
     setFormPlatform(game.platform.join(', '));
     setFormRating(String(game.rating)); setFormTags(game.tags.join(', '));
-    setFormDownloadUrl(game.download_path ?? '');
+    setFormAffiliateUrl(game.affiliate_url ?? '');
+    setFormDownloadUrl(game.download_url ?? game.download_path ?? '');
     setFormGameFile(null);
     setFormErrors({});
     setShowGameForm(true);
@@ -385,7 +398,7 @@ export default function AdminPage() {
     setFormBannerImg('https://images.pexels.com/photos/3165335/pexels-photo-3165335.jpeg?auto=compress&cs=tinysrgb&w=1260');
     setFormScreenshots('');
     setFormTrailer(''); setFormPlatform('Windows'); setFormRating('4.0');
-    setFormTags(''); setFormDownloadUrl(''); setFormGameFile(null);
+    setFormTags(''); setFormAffiliateUrl(''); setFormDownloadUrl(''); setFormGameFile(null);
     setFormErrors({});
     setShowGameForm(true);
   }
@@ -446,7 +459,8 @@ export default function AdminPage() {
   }
 
   async function uploadGameFile(slug: string): Promise<string | null> {
-    if (!formGameFile) return formDownloadUrl.trim() || null;
+    const configuredDownload = formDownloadUrl.trim();
+    if (!formGameFile) return configuredDownload && !isHttpUrl(configuredDownload) ? configuredDownload : null;
 
     const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession();
     const session = refreshed.session ?? (await supabase.auth.getSession()).data.session;
@@ -482,6 +496,7 @@ export default function AdminPage() {
       setSaving(false);
       return;
     }
+    const configuredDownload = formDownloadUrl.trim();
     const data: any = {
       title: formTitle.trim(), slug,
       description: formDesc.trim(), short_description: formShortDesc.trim(),
@@ -494,7 +509,8 @@ export default function AdminPage() {
       platform: parseList(formPlatform),
       rating: parseFloat(formRating) || 4.0,
       tags: parseList(formTags),
-      download_url: null,
+      affiliate_url: formAffiliateUrl.trim() || null,
+      download_url: isHttpUrl(configuredDownload) ? configuredDownload : null,
       download_path: downloadPath,
       screenshots: parseList(formScreenshots).length > 0 ? parseList(formScreenshots) : [formCoverImg.trim(), formBannerImg.trim()],
     };
@@ -835,7 +851,7 @@ export default function AdminPage() {
                       </td>
                       <td className="px-4 py-3">
                         {game.discount_percent > 0 ? (
-                          <span className="badge-discount text-white text-xs font-bold px-2 py-0.5 rounded-md">-{game.discount_percent}%</span>
+                          <span className="badge-discount text-white text-xs font-bold px-2 py-0.5 rounded-md bg-red-500/20">-{game.discount_percent}%</span>
                         ) : <span className="text-slate-600">--</span>}
                       </td>
                       <td className="px-4 py-3">
@@ -1241,7 +1257,8 @@ export default function AdminPage() {
               <FormField label="Cover Image URL" value={formCoverImg} onChange={setFormCoverImg} error={formErrors.cover_image} required />
               <FormField label="Banner Image URL" value={formBannerImg} onChange={setFormBannerImg} error={formErrors.banner_image} required />
               <FormField label="Trailer URL" value={formTrailer} onChange={setFormTrailer} placeholder="YouTube embed URL" error={formErrors.trailer_url} />
-              <FormField label="Private Download Path" value={formDownloadUrl} onChange={setFormDownloadUrl} placeholder="game-slug/installer.zip" error={formErrors.download_url} />
+              <FormField label="Affiliate URL" value={formAffiliateUrl} onChange={setFormAffiliateUrl} placeholder="https://partner.example/game" error={formErrors.affiliate_url} />
+              <FormField label="Download URL or Private Path" value={formDownloadUrl} onChange={setFormDownloadUrl} placeholder="https://partner.example/game or game-slug/installer.zip" error={formErrors.download_url} />
               <div>
               <label className="block text-xs font-medium text-slate-400 mb-1.5">Upload Game File</label>
               <div>

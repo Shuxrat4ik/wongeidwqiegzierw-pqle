@@ -1,215 +1,147 @@
-// import { NextRequest, NextResponse } from 'next/server';
-// import { createServiceRoleClient } from '@/lib/supabase-admin';
-// import { apiError, handleServerError } from '@/lib/server/error-handler';
-// import { finalPrice, regionalPrice, cents } from '@/lib/server/pricing';
-// import { rateLimit } from '@/lib/server/rate-limit';
-// import { requireUser } from '@/lib/server/auth';
-// import { stripe } from '@/lib/server/stripe';
-// import { checkUserOwnsGame } from '@/lib/server/ownership';
-// import { getOrigin } from '@/lib/server/http';
+import { NextRequest, NextResponse } from 'next/server';
+import { createServiceRoleClient } from '@/lib/supabase-admin';
+import { requireUser } from '@/lib/server/auth';
+import { getOrigin, jsonError, serverError } from '@/lib/server/http';
+import { rateLimit } from '@/lib/server/rate-limit';
+import { getAffiliateUrl } from '@/lib/affiliate';
 
-// type CheckoutBody = {
-//   items?: Array<{ gameId?: string }>;
-// };
+type CheckoutBody = {
+  items?: Array<{ gameId?: string }>;
+};
 
-// export const runtime = 'nodejs';
+type CartRow = {
+  game_id: string;
+  games: {
+    id: string;
+    title: string;
+    slug: string;
+    price: number | null;
+    affiliate_url: string | null;
+    download_url: string | null;
+    is_available: boolean | null;
+  } | null;
+};
 
-// function isMissingGameIdColumn(error: { code?: string; message?: string } | null | undefined) {
-//   return error?.code === '42703' || /game_id/i.test(error?.message ?? '');
-// }
+type CheckoutGame = NonNullable<CartRow['games']>;
 
-// export async function POST(req: NextRequest) {
-//   try {
-//     const limited = rateLimit(req, 'checkout', { limit: 20, windowMs: 60_000 });
-//     if (!limited.ok) {
-//       return NextResponse.json(
-//         { error: 'Too many checkout attempts' },
-//         { status: 429, headers: { 'Retry-After': String(limited.retryAfterSeconds) } }
-//       );
-//     }
+export const runtime = 'nodejs';
 
-//     const gate = await requireUser(req);
-//     if (!gate.ok) return gate.response;
+export async function POST(req: NextRequest) {
+  try {
+    const limited = rateLimit(req, 'checkout', { limit: 20, windowMs: 60_000 });
+    if (!limited.ok) {
+      return NextResponse.json(
+        { error: 'Too many checkout attempts' },
+        { status: 429, headers: { 'Retry-After': String(limited.retryAfterSeconds) } }
+      );
+    }
 
-//     let body: CheckoutBody = {};
-//     try {
-//       body = await req.json();
-//     } catch {
-//       body = {};
-//     }
+    const gate = await requireUser(req);
+    if (!gate.ok) return gate.response;
 
-//     const requestedGameIds = new Set(
-//       (body.items ?? [])
-//         .map((item) => item.gameId)
-//         .filter((id): id is string => typeof id === 'string' && id.length > 0)
-//     );
+    let body: CheckoutBody = {};
+    try {
+      body = await req.json();
+    } catch {
+      body = {};
+    }
 
-//     let cartQuery = gate.supabase
-//       .from('cart')
-//       .select('id, game_id, games(id, title, price, discount_percent, cover_image, is_available)')
-//       .eq('user_id', gate.user.id);
+    const requestedGameIds = new Set(
+      (body.items ?? [])
+        .map(item => item.gameId)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0)
+    );
 
-//     if (requestedGameIds.size > 0) {
-//       cartQuery = cartQuery.in('game_id', [...requestedGameIds]);
-//     }
+    const admin = createServiceRoleClient();
+    let rows: CartRow[] = [];
 
-//     const { data: cartRows, error: cartError } = await cartQuery;
-//     if (cartError) return apiError(cartError.message, 400);
+    if (requestedGameIds.size > 0) {
+      const { data: games, error: gamesError } = await admin
+        .from('games')
+        .select('id, title, slug, price, affiliate_url, download_url, is_available')
+        .in('id', [...requestedGameIds]);
 
-//     const rows = (cartRows ?? []).filter((row: any) => row.games?.is_available !== false);
-//     if (rows.length === 0) return apiError('Cart empty', 400);
+      if (gamesError) return jsonError(gamesError.message, 400);
 
-//     const admin = createServiceRoleClient();
-//     const ownershipChecks = await Promise.all(
-//       rows.map(async (row: any) => ({
-//         gameId: row.game_id,
-//         owned: await checkUserOwnsGame(admin, gate.user.id, row.game_id),
-//       }))
-//     );
-//     const ownedIds = new Set(ownershipChecks.filter((row) => row.owned).map((row) => row.gameId));
-//     const purchasable = rows.filter((row: any) => !ownedIds.has(row.game_id));
-//     if (purchasable.length === 0) {
-//       return apiError('All selected games are already owned', 409);
-//     }
+      rows = ((games ?? []) as CheckoutGame[])
+        .filter(game => game.is_available !== false)
+        .map(game => ({ game_id: game.id, games: game }));
+    } else {
+      const { data: cartRows, error: cartError } = await gate.supabase
+        .from('cart')
+        .select('game_id, games(id, title, slug, price, affiliate_url, download_url, is_available)')
+        .eq('user_id', gate.user.id);
 
-//     const freeRows = purchasable.filter((row: any) => Number(row.games.price ?? 0) === 0);
-//     const paidRows = purchasable.filter((row: any) => Number(row.games.price ?? 0) > 0);
+      if (cartError) return jsonError(cartError.message, 400);
 
-//     if (freeRows.length > 0) {
-//       const freeLibraryRows = freeRows.map((row: any) => ({
-//         user_id: gate.user.id,
-//         game_id: row.game_id,
-//       }));
+      rows = ((cartRows ?? []) as unknown as CartRow[]).filter(
+        row => row.games && row.games.is_available !== false
+      );
+    }
+    if (rows.length === 0) return jsonError('Cart empty', 400);
 
-//       const { error: freeLibraryError } = await admin
-//         .from('library')
-//         .upsert(freeLibraryRows, { onConflict: 'user_id,game_id', ignoreDuplicates: true });
-//       if (freeLibraryError) return apiError(freeLibraryError.message, 400);
+    const gameIds = rows.map(row => row.game_id);
+    const { data: ownedRows, error: ownedError } = await admin
+      .from('library')
+      .select('game_id')
+      .eq('user_id', gate.user.id)
+      .in('game_id', gameIds);
 
-//       await admin
-//         .from('cart')
-//         .delete()
-//         .eq('user_id', gate.user.id)
-//         .in('game_id', freeRows.map((row: any) => row.game_id));
-//     }
+    if (ownedError) return jsonError(ownedError.message, 400);
 
-//     if (paidRows.length === 0) {
-//       return NextResponse.json({
-//         ok: true,
-//         freeOnly: true,
-//         url: `${getOrigin(req)}/library?claim=success`,
-//       });
-//     }
+    const ownedIds = new Set((ownedRows ?? []).map((row: any) => row.game_id));
+    const purchasable = rows.filter(row => !ownedIds.has(row.game_id));
+    if (purchasable.length === 0) {
+      return jsonError('All selected games are already owned', 409);
+    }
 
-//     const subtotal = paidRows.reduce((sum: number, row: any) => sum + regionalPrice(Number(row.games.price ?? 0)), 0);
-//     const total = paidRows.reduce(
-//       (sum: number, row: any) => sum + finalPrice(Number(row.games.price ?? 0), Number(row.games.discount_percent ?? 0)),
-//       0
-//     );
-//     const discountAmount = Math.max(0, subtotal - total);
+    const freeRows = purchasable.filter(row => Number(row.games?.price ?? 0) === 0);
+    const paidRows = purchasable.filter(row => Number(row.games?.price ?? 0) > 0);
 
-//     let { data: order, error: orderError } = await admin
-//       .from('orders')
-//       .insert({
-//         user_id: gate.user.id,
-//         subtotal,
-//         discount_amount: discountAmount,
-//         total,
-//         total_price: total,
-//         currency: 'MYR',
-//         game_id: paidRows.length === 1 ? paidRows[0].game_id : null,
-//         status: 'pending',
-//         payment_status: 'pending',
-//         payment_method: 'stripe',
-//         notes: 'Stripe Checkout session created',
-//       })
-//       .select('id')
-//       .single();
+    if (freeRows.length > 0) {
+      const { error: freeLibraryError } = await admin
+        .from('library')
+        .upsert(
+          freeRows.map(row => ({ user_id: gate.user.id, game_id: row.game_id })),
+          { onConflict: 'user_id,game_id', ignoreDuplicates: true }
+        );
 
-//     if (orderError && isMissingGameIdColumn(orderError)) {
-//       const retry = await admin
-//         .from('orders')
-//         .insert({
-//           user_id: gate.user.id,
-//           subtotal,
-//           discount_amount: discountAmount,
-//           total,
-//           total_price: total,
-//           currency: 'USD',
-//           status: 'pending',
-//           payment_status: 'pending',
-//           payment_method: 'stripe',
-//           notes: 'Stripe Checkout session created',
-//         })
-//         .select('id')
-//         .single();
-//       order = retry.data;
-//       orderError = retry.error;
-//     }
+      if (freeLibraryError) return jsonError(freeLibraryError.message, 400);
 
-//     if (orderError || !order) {
-//       return apiError(orderError?.message || 'Could not create order', 400);
-//     }
+      await admin
+        .from('cart')
+        .delete()
+        .eq('user_id', gate.user.id)
+        .in('game_id', freeRows.map(row => row.game_id));
+    }
 
-//     const orderId = order.id;
-//     const orderItems = paidRows.map((row: any) => ({
-//       order_id: orderId,
-//       game_id: row.game_id,
-//       game_title: row.games.title,
-//       price: finalPrice(Number(row.games.price ?? 0), Number(row.games.discount_percent ?? 0)),
-//       price_at_purchase: finalPrice(Number(row.games.price ?? 0), Number(row.games.discount_percent ?? 0)),
-//       discount_percent: Number(row.games.discount_percent ?? 0),
-//     }));
+    if (paidRows.length === 0) {
+      return NextResponse.json({
+        ok: true,
+        freeOnly: true,
+        url: `${getOrigin(req)}/library?claim=success`,
+      });
+    }
 
-//     const { error: itemsError } = await admin.from('order_items').insert(orderItems);
-//     if (itemsError) return apiError(itemsError.message, 400);
+    const affiliateLinks = paidRows
+      .map(row => ({
+        gameId: row.game_id,
+        title: row.games?.title ?? 'Game',
+        url: row.games ? getAffiliateUrl(row.games) : null,
+      }))
+      .filter((row): row is { gameId: string; title: string; url: string } => Boolean(row.url));
 
-//     const origin = getOrigin(req);
-//     const checkout = await stripe().checkout.sessions.create(
-//       {
-//         mode: 'payment',
-//         customer_email: gate.user.email ?? undefined,
-//         client_reference_id: orderId,
-//         metadata: {
-//         orderId: String(orderId),
-//         userId: String(gate.user.id),
-//         gameIds: paidRows.map(r => r.game_id).join(',')
-//         },  
-//         line_items: paidRows.map((row: any) => ({
-//           quantity: 1,
-//           price_data: {
-//             currency: 'myr',
-//             unit_amount: cents(finalPrice(Number(row.games.price ?? 0), Number(row.games.discount_percent ?? 0))),
-//             product_data: {
-//               name: row.games.title,
-//               images: row.games.cover_image ? [row.games.cover_image] : undefined,
-//               metadata: { gameId: row.game_id },
-//             },
-//           },
-//         })),
-//         success_url: `${origin}/library?checkout=success&order=${orderId}`,
-//         cancel_url: `${origin}/cart?checkout=cancelled&order=${orderId}`,
-//       },
-//       { idempotencyKey: `checkout:${orderId}` }
-//     );
+    if (affiliateLinks.length === 0) {
+      return jsonError('No affiliate URL is configured for selected paid games', 400);
+    }
 
-//     const { error: updateError } = await admin
-//       .from('orders')
-//       .update({ stripe_session_id: checkout.id })
-//       .eq('id', orderId);
-
-//     if (updateError) return apiError(updateError.message, 400);
-
-//     await admin.from('payments').insert({
-//       order_id: orderId,
-//       stripe_checkout_session_id: checkout.id,
-//       status: 'pending',
-//       amount: total,
-//       currency: 'MYR',
-//     });
-
-//     return NextResponse.json({ orderId, sessionId: checkout.id, url: checkout.url });
-//   } catch (err) {
-//     return handleServerError('api/checkout', err);
-//   }
-// }
+    return NextResponse.json({
+      ok: true,
+      affiliateOnly: true,
+      url: affiliateLinks[0].url,
+      links: affiliateLinks,
+    });
+  } catch (err) {
+    return serverError('api/checkout', err);
+  }
+}

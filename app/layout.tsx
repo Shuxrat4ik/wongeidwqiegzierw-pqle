@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter, Outfit } from 'next/font/google';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -41,6 +42,7 @@ export default function RootLayout({
 
           <Footer />
           <Toaster richColors position="bottom-right" />
+          <SpeedInsights />
         </AuthProvider>
       </body>
     </html>

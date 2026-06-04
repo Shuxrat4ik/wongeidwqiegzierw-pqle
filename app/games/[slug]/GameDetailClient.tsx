@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase, Game, Review } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useParams, useRouter } from 'next/navigation';
-import { Star, Download, ShoppingCart, Heart, Check, ArrowLeft, Calendar, Monitor, User, Building2, Tag, Play, Loader as Loader2, MessageSquare, Send, ChevronLeft, ChevronRight, Cpu, HardDrive, MemoryStick, Film, Images, CreditCard } from 'lucide-react';
+import { Star, Download, ShoppingCart, Heart, Check, Calendar, Monitor, User, Building2, Tag, Play, Loader as Loader2, MessageSquare, Send, ChevronLeft, ChevronRight, Cpu, HardDrive, MemoryStick, Images, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import { cn, formatDate, formatLongDate } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -17,6 +17,102 @@ import { isDatabaseGameId } from '@/lib/game-id';
 import { addSeedToCollection, isSeedInCollection, openGameSite, readSeedCollection, toggleSeedWishlist } from '@/lib/game-collections';
 import { getAffiliateUrl } from '@/lib/affiliate';
 
+type MediaItem = {
+  type: 'image' | 'video';
+  src: string;
+  label: string;
+  thumb?: string | null;
+};
+
+function uniqueStrings(values: Array<string | null | undefined>) {
+  return [...new Set(values.map(value => value?.trim()).filter((value): value is string => Boolean(value)))];
+}
+
+function getYouTubeThumbnail(src: string) {
+  try {
+    const url = new URL(src);
+    const host = url.hostname.replace(/^www\./, '');
+    let id = '';
+
+    if (host === 'youtu.be') id = url.pathname.split('/').filter(Boolean)[0] ?? '';
+    if (host.includes('youtube.com')) {
+      id = url.searchParams.get('v') ?? '';
+      const parts = url.pathname.split('/').filter(Boolean);
+      if (!id && (parts[0] === 'embed' || parts[0] === 'shorts')) id = parts[1] ?? '';
+    }
+
+    return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
+  } catch {
+    return null;
+  }
+}
+
+function isDirectVideoUrl(src: string) {
+  return /\.(mp4|webm|ogg)(?:[?#].*)?$/i.test(src);
+}
+
+function getSteamAppId(src: string) {
+  try {
+    const url = new URL(src);
+    if (!url.hostname.includes('steamstatic.com')) return null;
+    const match = url.pathname.match(/\/steam\/apps\/(\d+)\//);
+    return match?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function steam4kCandidates(src: string) {
+  const appId = getSteamAppId(src);
+  if (!appId) return [src];
+
+  const base = `https://cdn.cloudflare.steamstatic.com/steam/apps/${appId}`;
+  return [
+    `${base}/library_hero.jpg`,
+    `${base}/page_bg_generated_v6b.jpg`,
+    `${base}/hero_capsule.jpg`,
+    src,
+  ];
+}
+
+function enhanceImageSrc(src: string) {
+  try {
+    const url = new URL(src);
+    if (url.hostname.includes('images.unsplash.com')) {
+      url.searchParams.set('auto', 'format');
+      url.searchParams.set('fit', 'crop');
+      url.searchParams.set('w', '3840');
+      url.searchParams.set('q', '95');
+      return url.toString();
+    }
+  } catch {
+    return src;
+  }
+
+  return src;
+}
+
+function buildMediaItems(game: Game): MediaItem[] {
+  const videos = uniqueStrings([...(game.videos ?? []), game.trailer_url]).map((src, index) => ({
+    type: 'video' as const,
+    src,
+    label: `Video ${index + 1}`,
+    thumb: getYouTubeThumbnail(src),
+  }));
+
+  const images = uniqueStrings([
+    ...(game.screenshots?.length ? game.screenshots : []),
+    game.banner_image,
+    game.cover_image,
+  ].flatMap(steam4kCandidates)).map((src, index) => ({
+    type: 'image' as const,
+    src: enhanceImageSrc(src),
+    label: `Screenshot ${index + 1}`,
+  }));
+
+  return [...images, ...videos];
+}
+
 
 export default function GameDetailPage() {
   const { slug } = useParams() as { slug: string };
@@ -28,8 +124,6 @@ export default function GameDetailPage() {
   const [isInCart, setIsInCart] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeScreenshot, setActiveScreenshot] = useState(0);
-  const [activeTrailerIndex, setActiveTrailerIndex] = useState(0);
-  const [showTrailer, setShowTrailer] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [relatedGames, setRelatedGames] = useState<Game[]>([]);
@@ -329,60 +423,44 @@ export default function GameDetailPage() {
   }
 
   async function buyNow() {
-  if (!game || isOwned) return;
+    if (!game || isOwned) return;
 
-  const affiliateUrl = getAffiliateUrl(game);
-  if (affiliateUrl) {
-    window.location.href = affiliateUrl;
-    return;
+    const affiliateUrl = getAffiliateUrl(game);
+    if (affiliateUrl) {
+      window.location.href = affiliateUrl;
+      return;
+    }
+
+    if (!user) {
+      toast.error('Sign in to buy this game');
+      return;
+    }
+
+    setActionLoading('buy');
+
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token ?? ''}`,
+        },
+        body: JSON.stringify({ items: [{ gameId: game.id }] }),
+      });
+
+      const payload = await res.json().catch(() => ({}));
+
+      if (!res.ok) throw new Error(payload?.error || 'Checkout failed');
+      if (!payload?.url) throw new Error('No affiliate URL configured');
+
+      window.location.href = payload.url;
+    } catch (err) {
+      console.error(err);
+      toast.error(err instanceof Error ? err.message : 'Checkout failed');
+    } finally {
+      setActionLoading(null);
+    }
   }
-
-  if (!user) {
-    toast.error('Sign in to buy this game');
-    return;
-  }
-
-  setActionLoading('buy');
-
-  try {
-    // 1. add to cart first
-    await fetch('/api/cart/add', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session?.access_token ?? ''}`,
-      },
-      body: JSON.stringify({ gameId: game.id }),
-    });
-
-    // 2. then checkout
-    const res = await fetch('/api/checkout', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session?.access_token ?? ''}`,
-      },
-      body: JSON.stringify({
-        items: [
-          {
-            gameId: game.id,
-          },
-        ],
-      }),
-    });
-
-    const payload = await res.json();
-
-    if (!res.ok) throw new Error(payload?.error || 'Checkout failed');
-
-    window.location.href = payload.url;
-  } catch (err) {
-    console.error(err);
-    toast.error('Checkout failed');
-  } finally {
-    setActionLoading(null);
-  }
-}
 
   async function addToLibrary() {
     if (!game || isOwned) return;
@@ -461,16 +539,16 @@ export default function GameDetailPage() {
 
   function nextScreenshot() {
     if (!game) return;
-    const shots = (game.screenshots?.length ? game.screenshots : [game.cover_image, game.banner_image]).filter(Boolean);
-    if (shots.length === 0) return;
-    setActiveScreenshot((activeScreenshot + 1) % shots.length);
+    const items = buildMediaItems(game);
+    if (items.length === 0) return;
+    setActiveScreenshot((activeScreenshot + 1) % items.length);
   }
 
   function prevScreenshot() {
     if (!game) return;
-    const shots = (game.screenshots?.length ? game.screenshots : [game.cover_image, game.banner_image]).filter(Boolean);
-    if (shots.length === 0) return;
-    setActiveScreenshot((activeScreenshot - 1 + shots.length) % shots.length);
+    const items = buildMediaItems(game);
+    if (items.length === 0) return;
+    setActiveScreenshot((activeScreenshot - 1 + items.length) % items.length);
   }
 
   if (loading) {
@@ -492,15 +570,14 @@ export default function GameDetailPage() {
 
   const isFree = game.price === 0;
   const isSeed = isSeedGameId(game.id);
-  const detailVideos = (game.videos ?? []).filter(Boolean);
-  const activeVideoUrl = activeTrailerIndex >= 0 ? detailVideos[activeTrailerIndex] : game.trailer_url;
-  const trailerEmbed = activeVideoUrl ? toYouTubeEmbedUrl(activeVideoUrl) ?? activeVideoUrl : null;
   const hasDiscount = game.discount_percent > 0;
   const discountedPrice = game.price * (1 - game.discount_percent / 100);
   const stars = Math.round(game.rating);
   const sysReq = game.system_requirements as any;
-  const screenshots = (game.screenshots?.length ? game.screenshots : [game.cover_image, game.banner_image]).filter(Boolean);
-  const pickedVideos = detailVideos.slice(0, 3);
+  const mediaItems = buildMediaItems(game);
+  const activeMedia = mediaItems[Math.min(activeScreenshot, Math.max(mediaItems.length - 1, 0))];
+  const imageCount = mediaItems.filter(item => item.type === 'image').length;
+  const videoCount = mediaItems.filter(item => item.type === 'video').length;
   const avgReviewRating = reviews.length > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : null;
 
   return (
@@ -508,20 +585,10 @@ export default function GameDetailPage() {
       <div className="relative h-[50px] md:h-[150px] object-cover overflow-hidden">
       </div>
 
-      {/* Trailer Modal */}
-      {showTrailer && activeVideoUrl && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setShowTrailer(false)}>
-          <div className="w-full max-w-4xl aspect-video rounded-xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <iframe src={trailerEmbed ?? activeVideoUrl} className="w-full h-full" allow="autoplay; fullscreen" allowFullScreen title="Trailer" />
-          </div>
-          <button onClick={() => setShowTrailer(false)} className="absolute top-4 right-4 text-white/60 hover:text-white text-2xl">✕</button>
-        </div>
-      )}
-
       {/* Content */}
-      <div className="relative z-10 mx-auto -mt-20 max-w-[1500px] px-4 pb-20 sm:px-6">
-        <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="min-w-0 space-y-8">
+      <div className="relative z-10 mx-auto -mt-20 max-w-[1240px] px-4 pb-20 sm:px-6">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,740px)_340px] xl:items-start xl:justify-center xl:gap-8">
+          <div className="min-w-0 space-y-6">
             {/* Title */}
             <div>
               <div className="flex flex-wrap gap-2 mb-3">
@@ -542,134 +609,138 @@ export default function GameDetailPage() {
             </div>
 
             {/* Media Hub */}
-            <section className="overflow-hidden rounded-lg border border-[#080a12] bg-[#080a12] shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
-              <div className="flex flex-col gap-3 border-b border-[#080a12] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#0078f4]/20 bg-[#080a12]/10">
-                    <Images className="h-5 w-5 text-[#0078f4]" />
+            <section className="w-full overflow-hidden rounded-lg shadow-[0_16px_48px_rgba(0,0,0,0.28)]">
+              {/* <div className="flex flex-col gap-2 border-b border-white/5 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-[#0078f4]/20 bg-[#0078f4]/5">
+                    <Images className="h-4 w-4 text-[#0078f4]" />
                   </div>
                   <div className="min-w-0">
-                    <h2 className="font-display text-xl font-black text-white">Media Hub</h2>
-                    <p className="truncate text-sm text-[#9e9e9e]">
-                      {screenshots.length} screenshots · {pickedVideos.length} videos
+                    <h2 className="font-display text-lg font-black text-white">Media Hub</h2>
+                    <p className="truncate text-xs text-[#9e9e9e]">
+                      {imageCount} screenshots · {videoCount} videos
                     </p>
                   </div>
                 </div>
-                {pickedVideos.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveTrailerIndex(0);
-                      setShowTrailer(true);
-                    }}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#0078f4] px-4 text-sm font-black text-white transition hover:bg-[#0056d6]"
-                  >
-                    <Film className="h-4 w-4" />
-                    Watch trailer
-                  </button>
-                )}
-              </div>
+              </div> */}
 
-              <div className="grid gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-                <div className="min-w-0">
-                  <div className="group relative aspect-video overflow-hidden rounded-lg bg-black">
+              <div className="p-3">
+                <div className="group relative aspect-video overflow-hidden rounded-lg bg-black object-cover">
+                  {activeMedia?.type === 'video' ? (
+                    toYouTubeEmbedUrl(activeMedia.src) ? (
+                      <iframe
+                        src={toYouTubeEmbedUrl(activeMedia.src) ?? ''}
+                        className="h-full w-full"
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                        title={`${game.title} video`}
+                      />
+                    ) : isDirectVideoUrl(activeMedia.src) ? (
+                      <video src={activeMedia.src} controls className="h-full w-full bg-black object-contain" />
+                    ) : (
+                      <iframe
+                        src={activeMedia.src}
+                        className="h-full w-full"
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                        title={`${game.title} video`}
+                      />
+                    )
+                  ) : (
                     <img
-                      src={screenshots[activeScreenshot] ?? game.banner_image}
+                      src={activeMedia?.src ?? game.banner_image}
                       alt=""
-                      className="h-full w-full object-cover"
-                      onError={e => { e.currentTarget.src = GAME_IMAGE_FALLBACK; }}
+                      className="h-full w-full object-cover object-center"
+                      decoding="async"
+                      onError={e => { e.currentTarget.src = enhanceImageSrc(GAME_IMAGE_FALLBACK); }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" />
-                    {screenshots.length > 1 && (
-                      <>
-                        <button type="button" onClick={prevScreenshot} className="absolute left-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg border border-white/10 bg-black/55 text-white/75 backdrop-blur transition hover:text-white">
-                          <ChevronLeft className="h-5 w-5" />
-                        </button>
-                        <button type="button" onClick={nextScreenshot} className="absolute right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg border border-white/10 bg-black/55 text-white/75 backdrop-blur transition hover:text-white">
-                          <ChevronRight className="h-5 w-5" />
-                        </button>
-                        <div className="absolute bottom-3 right-3 z-20 rounded-lg border border-white/10 bg-black/55 px-3 py-1.5 text-xs font-bold text-white/80 backdrop-blur">
-                          {activeScreenshot + 1} / {screenshots.length}
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-                    {screenshots.map((src, i) => (
-                      <button
-                        type="button"
-                        key={`${src}-${i}`}
-                        onClick={() => setActiveScreenshot(i)}
-                        className={cn(
-                          'screenshot-thumb h-20 w-32 shrink-0 overflow-hidden rounded-lg border opacity-65 transition',
-                          activeScreenshot === i ? 'border-cyan-300 opacity-100' : 'border-white/10 hover:border-white/25'
-                        )}
-                      >
-                        <img src={src} alt="" className="h-full w-full object-cover" onError={e => { e.currentTarget.src = GAME_IMAGE_FALLBACK; }} />
-                      </button>
-                    ))}
-                  </div>
+                  )}
+                  {mediaItems.length > 1 && (
+                    <>
+                      {/* <button type="button" onClick={prevScreenshot} className="absolute left-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white/80 backdrop-blur transition hover:bg-black/75 hover:text-white">
+                        <ChevronLeft className="h-5 w-5" />
+                      </button> */}
+                      {/* <button type="button" onClick={nextScreenshot} className="absolute right-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white/80 backdrop-blur transition hover:bg-black/75 hover:text-white">
+                        <ChevronRight className="h-5 w-5" />
+                      </button> */}
+                      {/* <div className="absolute bottom-2 right-2 z-20 rounded-md border border-white/10 bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white/80 backdrop-blur">
+                        {Math.min(activeScreenshot + 1, mediaItems.length)} / {mediaItems.length}
+                      </div> */}
+                    </>
+                  )}
                 </div>
 
-                <div className="grid min-w-0 gap-3 sm:grid-cols-3 xl:grid-cols-1">
-                  {pickedVideos.length === 0 ? (
-                    <div className="flex min-h-36 items-center justify-center rounded-lg border border-dashed border-white/10 bg-black/20 text-sm text-slate-500 sm:col-span-3 xl:col-span-1">
-                      No videos available.
-                    </div>
-                  ) : (
-                    pickedVideos.map((src, idx) => (
+                <div className="mt-3 flex items-center gap-2">
+                  {mediaItems.length > 3 && (
+                    <button type="button" onClick={prevScreenshot} className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/75 transition hover:bg-white/15 hover:text-white sm:flex">
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                  )}
+                  <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1">
+                    {mediaItems.map((item, i) => {
+                      const selected = activeScreenshot === i;
+                      return (
                       <button
-                        key={`${src}-${idx}`}
                         type="button"
-                        onClick={() => {
-                          setActiveTrailerIndex(idx);
-                          setShowTrailer(true);
-                        }}
-                        className="group/video overflow-hidden rounded-lg border border-white/10 bg-black/30 text-left transition hover:border-cyan-300/45"
+                        key={`${item.type}-${item.src}-${i}`}
+                        onClick={() => setActiveScreenshot(i)}
+                        className={cn(
+                          'relative h-14 w-24 shrink-0 overflow-hidden rounded-md border bg-black transition sm:h-16 sm:w-28',
+                          selected ? 'border-white ring-1 ring-white/70' : 'border-white/10 hover:border-white/35'
+                        )}
                       >
-                        <div className="relative aspect-video bg-black">
-                          {toYouTubeEmbedUrl(src) ? (
-                            <iframe
-                              src={toYouTubeEmbedUrl(src) ?? ''}
-                              className="h-full w-full pointer-events-none opacity-75 transition group-hover/video:opacity-100"
-                              allow="autoplay; fullscreen"
-                              allowFullScreen
-                              title={`${game.title} video preview`}
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-sm text-slate-400">Video</div>
-                          )}
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/18">
-                            <span className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/20 bg-black/55 text-white backdrop-blur">
-                              <Play className="h-5 w-5 fill-current" />
+                        {item.type === 'image' ? (
+                          <img
+                            src={item.src}
+                            alt=""
+                            className="h-full w-full object-cover object-center"
+                            decoding="async"
+                            onError={e => { e.currentTarget.src = enhanceImageSrc(GAME_IMAGE_FALLBACK); }}
+                          />
+                        ) : item.thumb ? (
+                          <img
+                            src={item.thumb}
+                            alt=""
+                            className="h-full w-full object-cover"
+                            onError={e => { e.currentTarget.style.display = 'none'; }}
+                          />
+                        ) : (
+                          <div className="h-full w-full bg-black" />
+                        )}
+                        {item.type === 'video' && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur">
+                              <Play className="ml-0.5 h-4 w-4 fill-current" />
                             </span>
                           </div>
-                        </div>
-                        <div className="flex items-center justify-between gap-3 p-3">
-                          <span className="truncate text-sm font-bold text-white">Video {idx + 1}</span>
-                          <span className="shrink-0 text-xs font-black text-cyan-300">Watch</span>
-                        </div>
+                        )}
+                        <span className="sr-only">{item.label}</span>
                       </button>
-                    ))
+                    );
+                    })}
+                  </div>
+                  {mediaItems.length > 3 && (
+                    <button type="button" onClick={nextScreenshot} className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/75 transition hover:bg-white/15 hover:text-white sm:flex">
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
                   )}
                 </div>
               </div>
             </section>
 
             {/* Description */}
-            <div>
+            <div className="max-w-[720px]">
               <h2 className="text-lg font-bold text-white mb-3 section-header">About This Game</h2>
               <p className="text-[#f5f5f5] leading-relaxed whitespace-pre-line">{game.description}</p>
             </div>
 
             {/* System Requirements */}
             {sysReq && (sysReq.minimum || sysReq.recommended) && (
-              <div>
+              <div className="max-w-[720px]">
                 <h2 className="text-lg font-bold text-white mb-4 section-header">System Requirements</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   {sysReq.minimum && (
-                    <div className="bg-[#080a12] rounded-xl border border-[#3a3a3a] p-4">
+                    <div className="rounded-lg border border-white/10 bg-[#080a12] p-4">
                       <h3 className="text-sm font-bold text-[#9e9e9e] mb-3">Minimum</h3>
                       <div className="space-y-2.5">
                         <ReqRow icon={<Monitor className="w-4 h-4 text-[#0078f4]" />} label="OS" value={sysReq.minimum.os} />
@@ -681,7 +752,7 @@ export default function GameDetailPage() {
                     </div>
                   )}
                   {sysReq.recommended && (
-                    <div className="bg-[#080a12] rounded-xl border border-[#3a3a3a] p-4">
+                    <div className="rounded-lg border border-white/10 bg-[#080a12] p-4">
                       <h3 className="text-sm font-bold text-[#0078f4] mb-3">Recommended</h3>
                       <div className="space-y-2.5">
                         <ReqRow icon={<Monitor className="w-4 h-4 text-[#0078f4]" />} label="OS" value={sysReq.recommended.os} />
@@ -697,11 +768,11 @@ export default function GameDetailPage() {
             )}
 
             {/* Tags */}
-            <div>
+            <div className="max-w-[720px]">
               <h2 className="text-lg font-bold text-white mb-3 section-header">Tags</h2>
               <div className="flex flex-wrap gap-2">
                 {game.tags.map(tag => (
-                  <span key={tag} className="flex items-center gap-1 text-sm bg-white/5 hover:bg-white/10 border border-[#3a3a3a] text-[#f5f5f5] px-3 py-1.5 rounded-lg transition-colors cursor-default">
+                  <span key={tag} className="flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-[#f5f5f5] transition-colors hover:bg-white/10 cursor-default">
                     <Tag className="w-3 h-3 text-[#0078f4]" />{tag}
                   </span>
                 ))}
@@ -709,7 +780,7 @@ export default function GameDetailPage() {
             </div>
 
             {/* Reviews */}
-            <div>
+            <div className="max-w-[720px]">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-white section-header">
                   <MessageSquare className="w-5 h-5 text-sky-400 inline mr-2" />
@@ -914,16 +985,22 @@ export default function GameDetailPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="min-w-0 space-y-4 relative group" style={{ perspective: 1500 }}>
-            <div className="flex flex-col gap-4 mt-28 rounded-[1.75rem] border border-white/10 bg-slate-950/90 p-6 ring-1 ring-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.25)] backdrop-blur-xl">
-              <img src={game.cover_image} alt={game.title} className="w-full aspect-[3/4] object-cover rounded-[1.5rem]" onError={e => { e.currentTarget.src = GAME_IMAGE_FALLBACK; }} />
+          <div className="min-w-0 space-y-4 mt-40">
+            <div className="flex flex-col gap-4 rounded-lg p-4 shadow-[0_20px_60px_rgba(0,0,0,0.25)] backdrop-blur-xl">
+              <img
+                src={game.banner_image || game.cover_image}
+                alt={game.title}
+                className="w-full min-h-[300px] aspect-video rounded-lg object-cover"
+                decoding="async"
+                onError={e => { e.currentTarget.src = enhanceImageSrc(GAME_IMAGE_FALLBACK); }}
+              />
               <div>
                 {isFree ? (
-                  <div className="text-2xl font-black text-sky-400">FREE</div>
+                  <div className="text-xl font-black text-sky-400">FREE</div>
                 ) : (
                   <div className="flex items-end gap-2">
                     {hasDiscount && <span className="text-slate-500 line-through text-sm">${game.price.toFixed(2)}</span>}
-                    <span className="text-2xl font-black text-white">${discountedPrice.toFixed(2)}</span>
+                    <span className="text-xl font-black text-white">${discountedPrice.toFixed(2)}</span>
                     {hasDiscount && <span className="badge-discount text-white text-xs font-bold px-2 py-0.5 rounded-md ml-1">-{game.discount_percent}%</span>}
                   </div>
                 )}
@@ -937,7 +1014,7 @@ export default function GameDetailPage() {
                       if (isSeed) downloadSeedGame();
                       else void startVerifiedDownload(supabase, game.slug);
                     }}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl transition-colors shadow-lg shadow-sky-500/20"
+                    className="w-full flex items-center justify-center gap-2 rounded-lg bg-sky-500 py-3 text-sm font-bold text-white shadow-lg shadow-sky-500/20 transition-colors hover:bg-sky-400"
                   >
                     <Download className="w-4 h-4" /> Play / Download
                   </button>
@@ -952,33 +1029,33 @@ export default function GameDetailPage() {
                         });
                       }}
                       disabled={actionLoading === 'lib'}
-                      className="w-full flex items-center justify-center gap-2 py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl transition-colors shadow-lg shadow-sky-500/20"
+                      className="w-full flex items-center justify-center gap-2 rounded-lg bg-sky-500 py-3 text-sm font-bold text-white shadow-lg shadow-sky-500/20 transition-colors hover:bg-sky-400"
                     >
                       {actionLoading === 'lib' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Download Free
                     </button>
-                    <button onClick={addToLibrary} disabled={actionLoading === 'lib'} className="w-full flex items-center justify-center gap-2 py-2.5 bg-white/10 hover:bg-white/15 text-white font-medium rounded-xl transition-colors text-sm">
+                    <button onClick={addToLibrary} disabled={actionLoading === 'lib'} className="w-full flex items-center justify-center gap-2 rounded-lg bg-white/10 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/15">
                       {actionLoading === 'lib' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} Add to Library
                     </button>
                   </>
                 ) : (
                   <>
-                    <button onClick={buyNow} disabled={actionLoading === 'buy'} className="w-full flex items-center justify-center gap-2 py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl transition-colors shadow-lg shadow-sky-500/20 disabled:opacity-60">
+                    <button onClick={buyNow} disabled={actionLoading === 'buy'} className="w-full flex items-center justify-center gap-2 rounded-lg bg-sky-500 py-3 text-sm font-bold text-white shadow-lg shadow-sky-500/20 transition-colors hover:bg-sky-400 disabled:opacity-60">
                       {actionLoading === 'buy' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />} Buy Now
                     </button>
-                    <button onClick={addToCart} disabled={isInCart || actionLoading === 'cart'} className={cn('w-full flex items-center justify-center gap-2 py-2.5 font-medium rounded-xl transition-colors text-sm', isInCart ? 'bg-green-500/20 text-green-400 border border-green-500/30 cursor-default' : 'bg-white/10 hover:bg-white/15 text-white')}>
+                    <button onClick={addToCart} disabled={isInCart || actionLoading === 'cart'} className={cn('w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-colors', isInCart ? 'bg-green-500/20 text-green-400 border border-green-500/30 cursor-default' : 'bg-white/10 hover:bg-white/15 text-white')}>
                       {actionLoading === 'cart' ? <Loader2 className="w-4 h-4 animate-spin" /> : isInCart ? <><Check className="w-4 h-4" /> In Cart</> : <><ShoppingCart className="w-4 h-4" /> Add to Cart</>}
                     </button>
-                    {isInCart && <Link href="/cart" className="w-full flex items-center justify-center gap-2 py-2.5 bg-white/10 hover:bg-white/15 text-white font-medium rounded-xl transition-colors text-sm">View Cart</Link>}
+                    {isInCart && <Link href="/cart" className="w-full flex items-center justify-center gap-2 rounded-lg bg-white/10 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/15">View Cart</Link>}
                   </>
                 )}
-                <button onClick={toggleWishlist} disabled={actionLoading === 'wish'} className={cn('w-full flex items-center justify-center gap-2 py-2.5 font-medium rounded-xl transition-colors text-sm border', isWishlisted ? 'bg-sky-500/15 border-sky-500/40 text-sky-400' : 'bg-transparent border-white/10 text-slate-400 hover:border-white/20 hover:text-white')}>
+                <button onClick={toggleWishlist} disabled={actionLoading === 'wish'} className={cn('w-full flex items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-medium transition-colors', isWishlisted ? 'bg-sky-500/15 border-sky-500/40 text-sky-400' : 'bg-transparent border-white/10 text-slate-400 hover:border-white/20 hover:text-white')}>
                   {actionLoading === 'wish' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Heart className={cn('w-4 h-4', isWishlisted && 'fill-current text-sky-400')} />}
                   {isWishlisted ? 'Wishlisted' : 'Add to Wishlist'}
                 </button>
               </div>
             </div>
 
-            <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/90 p-6 ring-1 ring-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.25)] backdrop-blur-xl">
+            <div className="rounded-lg p-4 shadow-[0_20px_60px_rgba(0,0,0,0.25)] backdrop-blur-xl">
               <h3 className="font-bold text-white text-sm">Game Details</h3>
               <div className="mt-2 flex flex-col divide-y divide-white/10 text-sm">
                 <InfoRow icon={<User className="w-4 h-4 text-sky-400" />} label="Developer" value={game.developer} />

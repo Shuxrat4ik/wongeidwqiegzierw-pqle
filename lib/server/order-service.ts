@@ -1,5 +1,14 @@
-import Stripe from 'stripe';
 import { createServiceRoleClient } from '@/lib/supabase-admin';
+
+type CheckoutSession = {
+  id: string;
+  client_reference_id?: string | null;
+  metadata?: Record<string, string> | null;
+  payment_intent?: string | { id?: string | null } | null;
+  payment_status?: string | null;
+  amount_total?: number | null;
+  currency?: string | null;
+};
 
 function isMissingGameIdColumn(error: { code?: string; message?: string } | null) {
   return error?.code === '42703' || /game_id/i.test(error?.message ?? '');
@@ -31,7 +40,7 @@ function logSupabaseResult(
   });
 }
 
-export async function fulfillPaidOrder(session: Stripe.Checkout.Session) {
+export async function fulfillPaidOrder(session: CheckoutSession) {
   const admin = createServiceRoleClient();
   const orderId = session.metadata?.orderId || session.client_reference_id;
   const metadataUserId = session.metadata?.userId;
@@ -178,7 +187,7 @@ export async function fulfillPaidOrder(session: Stripe.Checkout.Session) {
   }
 }
 
-export async function markOrderFailed(session: Stripe.Checkout.Session) {
+export async function markOrderFailed(session: CheckoutSession) {
   const orderId = session.metadata?.orderId || session.client_reference_id;
   if (!orderId) return;
 

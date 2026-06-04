@@ -20,6 +20,7 @@ const GAME_WRITE_KEYS = [
   'review_count',
   'price',
   'discount_percent',
+  'affiliate_url',
   'download_url',
   'download_path',
   'system_requirements',
@@ -46,7 +47,7 @@ export function sanitizeGameInsert(body: Record<string, unknown>) {
       continue;
     }
 
-    if (key === 'trailer_url' || key === 'download_url' || key === 'download_path') {
+    if (key === 'trailer_url' || key === 'affiliate_url' || key === 'download_url' || key === 'download_path') {
       out[key] = val === '' ? null : val;
       continue;
     }
