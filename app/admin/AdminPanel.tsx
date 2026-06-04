@@ -834,7 +834,7 @@ export default function AdminPage() {
                     <tr key={`${game.id}-${game.slug}-${index}`} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <img src={game.cover_image} alt="" className="w-10 h-14 object-cover rounded" />
+                          <img src={game.cover_image} alt="" className="w-10 h-14 rounded bg-black object-cover" />
                           <div>
                             <p className="font-medium text-white">{game.title}</p>
                             <p className="text-xs text-slate-500">{game.developer}</p>
@@ -950,7 +950,7 @@ export default function AdminPage() {
                     <div className="space-y-2">
                     {items.map((f, idx) => (
                       <div key={f.id} className="flex items-center gap-2 rounded-lg border border-white/5 bg-[#1a1a1a] p-3">
-                        {f.games && <img src={(f.games as Game).cover_image} alt="" className="w-10 h-14 object-cover rounded shrink-0" />}
+                        {f.games && <img src={(f.games as Game).cover_image} alt="" className="w-10 h-14 rounded bg-black object-cover shrink-0" />}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-white truncate">{f.games ? (f.games as Game).title : 'Unknown game'}</p>
                           <p className="text-xs text-slate-500">
@@ -1043,7 +1043,7 @@ export default function AdminPage() {
                       <td className="px-4 py-3">
                         <div className="flex gap-1">
                           {(order.order_items ?? []).map((item: any, i: number) => (
-                            <img key={i} src={item.games?.cover_image ?? ''} alt="" className="w-8 h-10 object-cover rounded" title={item.games?.title ?? ''} />
+                            <img key={i} src={item.games?.cover_image ?? ''} alt="" className="w-8 h-10 rounded bg-black object-cover" title={item.games?.title ?? ''} />
                           ))}
                         </div>
                       </td>
@@ -1216,7 +1216,7 @@ export default function AdminPage() {
               <div>
                 <p className="text-xs text-slate-400 mb-1.5">Cover Preview</p>
                 {formCoverImg ? (
-                  <img src={formCoverImg} alt="Cover preview" className="w-full aspect-[3/4] object-cover rounded-lg border border-white/10" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  <img src={formCoverImg} alt="Cover preview" className="w-full aspect-[3/4] rounded-lg border border-white/10 bg-black object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 ) : (
                   <div className="w-full aspect-[3/4] rounded-lg border border-dashed border-white/10 flex items-center justify-center"><ImageIcon className="w-8 h-8 text-slate-600" /></div>
                 )}
@@ -1224,7 +1224,7 @@ export default function AdminPage() {
               <div>
                 <p className="text-xs text-slate-400 mb-1.5">Banner Preview</p>
                 {formBannerImg ? (
-                  <img src={formBannerImg} alt="Banner preview" className="w-full aspect-video object-cover rounded-lg border border-white/10" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  <img src={formBannerImg} alt="Banner preview" className="w-full aspect-video rounded-lg border border-white/10 bg-black object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 ) : (
                   <div className="w-full aspect-video rounded-lg border border-dashed border-white/10 flex items-center justify-center"><ImageIcon className="w-8 h-8 text-slate-600" /></div>
                 )}

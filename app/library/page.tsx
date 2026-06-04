@@ -134,7 +134,7 @@ export default function LibraryPage() {
             return (
               <div key={`${id}-${game.id}-${index}`} className="bg-[#0B0F19] rounded-xl border border-white/5 hover:border-sky-500/20 transition-colors overflow-hidden group game-card">
                 <div className="relative aspect-[16/9] overflow-hidden">
-                  <img src={game.banner_image} alt={game.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={game.banner_image} alt={game.title} className="w-full h-full bg-black object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="cover-gradient absolute inset-0" />
                   <div className="absolute bottom-2 left-2"><span className="badge-owned text-white text-xs font-bold px-2 py-0.5 rounded-md">Owned</span></div>
                 </div>

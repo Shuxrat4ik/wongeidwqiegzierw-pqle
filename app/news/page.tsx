@@ -71,7 +71,7 @@ export default function NewsPage() {
             {featured.map((game, index) => (
               <Link key={`${game.id}-${game.slug}-${index}`} href={`/games/${game.slug}`} className="group overflow-hidden rounded-xl border border-white/10 bg-[#0B0F19]">
                 <div className="relative aspect-video overflow-hidden">
-                  <img src={game.banner_image || game.cover_image} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                  <img src={game.banner_image || game.cover_image} alt="" className="h-full w-full bg-black object-cover transition duration-500 group-hover:scale-105" />
                   <span className="absolute left-3 top-3 rounded-lg bg-[#3b82f6] px-2.5 py-1 text-xs font-black text-white">
                     -{game.discount_percent}%
                   </span>

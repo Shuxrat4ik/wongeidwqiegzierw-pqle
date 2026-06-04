@@ -52,7 +52,7 @@ export const GameCard = memo(function GameCard({
           src={game.cover_image || '/placeholder.png'}
           alt={game.title}
           fill
-          className="object-cover"
+          className="object-cover bg-black"
           sizes="(max-width: 768px) 100vw, 33vw"
         />
 

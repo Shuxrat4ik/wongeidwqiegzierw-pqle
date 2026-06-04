@@ -267,7 +267,7 @@ function DiscoverHero({
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
       >
-        <img src={imageFor(game)} alt="" className="nexus-crisp-image h-full w-full object-cover" />
+        <img src={imageFor(game)} alt="" className="nexus-crisp-image h-full w-full bg-black object-cover" />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,#080a12_0%,rgba(8,10,18,.78)_31%,rgba(8,10,18,.34)_66%,rgba(8,10,18,.12)_100%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(0deg,#080a12_0%,rgba(8,10,18,.12)_48%,rgba(8,10,18,.38)_100%)]" />
       </motion.div>
@@ -284,7 +284,7 @@ function DiscoverHero({
             Featured Discover Drop
           </div>
 
-          <h1 className="nexus-hero-title">{game.title}</h1>
+          <h1 className="nexus-hero-title">Forza Horizon 6 | Premium Edition (Xbox Series X/S, PC) - Xbox Live Key - GLOBAL</h1>
           <p className="mt-6 max-w-2xl text-base leading-7 text-[#c8d1e7] sm:text-lg">
             {game.short_description || game.description || 'Discover a polished PC game with trailers, screenshots, and store-ready details.'}
           </p>
@@ -350,7 +350,7 @@ function DiscoverFallbackHero() {
   return (
     <section className="nexus-hero relative min-h-[calc(100svh-44px)] overflow-hidden">
       <div className="absolute inset-0">
-        <img src={FALLBACK_IMAGE} alt="" className="nexus-crisp-image h-full w-full object-cover opacity-55" />
+        <img src={FALLBACK_IMAGE} alt="" className="nexus-crisp-image h-full w-full bg-black object-cover opacity-55" />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,#080a12_0%,rgba(8,10,18,.78)_42%,rgba(8,10,18,.32)_100%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(0deg,#080a12_0%,rgba(8,10,18,.12)_52%,rgba(8,10,18,.38)_100%)]" />
       </div>
@@ -463,7 +463,7 @@ function TrendingRail({
 
       <div ref={scrollRef} className="flex snap-x gap-4 overflow-x-auto overflow-y-hidden py-2 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {loading && games.length === 0
-          ? Array.from({ length: 6 }).map((_, index) => <div key={index} className="h-[300px] w-[230px] shrink-0 rounded-xl bg-white/[0.06]" />)
+          ? Array.from({ length: 6 }).map((_, index) => <div key={index} className="h-[340px] w-[260px] shrink-0 rounded-xl bg-white/[0.06] sm:w-[280px]" />)
           : games.map((game, index) => (
               <motion.article
                 key={game.id + '-' + index}
@@ -471,11 +471,11 @@ function TrendingRail({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-80px' }}
                 transition={{ duration: 0.45, delay: index * 0.04 }}
-                className="nexus-game-card group w-[230px] shrink-0 snap-start overflow-hidden rounded-xl"
+                className="nexus-game-card group w-[220px] shrink-0 snap-start overflow-hidden rounded-xl sm:w-[240px]"
               >
                 <Link href={'/games/' + game.slug} className="block">
-                  <div className="relative aspect-[16/10] overflow-hidden">
-                    <img src={landscapeFor(game)} alt={game.title} loading="lazy" decoding="async" className="nexus-crisp-image h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <img src={game.cover_image} alt={game.title} loading="lazy" decoding="async" className="nexus-crisp-image h-full w-full bg-black object-cover transition-transform duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0b1020]/82 via-[#0b1020]/10 to-transparent" />
                     {game.discount_percent > 0 ? <div className="nexus-discount-badge">-{game.discount_percent}%</div> : null}
                     <div className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-md bg-black/55 px-2 py-1 text-xs font-bold backdrop-blur">
@@ -569,7 +569,7 @@ function NewReleaseWall({ games, loading }: { games: Game[]; loading: boolean })
                 transition={{ duration: 0.35, delay: index * 0.05 }}
               >
                 <Link href={'/games/' + game.slug} className="nexus-release-card group">
-                  <img src={coverFor(game)} alt={game.title} loading="lazy" decoding="async" className="nexus-crisp-image h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <img src={coverFor(game)} alt={game.title} loading="lazy" decoding="async" className="nexus-crisp-image h-full w-full bg-black object-cover transition-transform duration-700 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#080a12]/82 via-[#080a12]/10 to-transparent" />
                   <div className="absolute left-3 top-3 flex flex-col gap-1.5">
                     <span className="nexus-news-badge"><span />News</span>
@@ -607,7 +607,7 @@ function TopSellerBoard({ games, loading }: { games: Game[]; loading: boolean })
                     <span className="nexus-gradient-text">{String(index + 1).padStart(2, '0')}</span>
                   </div>
                   <div className="h-16 w-24 shrink-0 overflow-hidden rounded-lg sm:h-20 sm:w-32">
-                    <img src={landscapeFor(game)} alt={game.title} loading="lazy" decoding="async" className="nexus-crisp-image h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <img src={landscapeFor(game)} alt={game.title} loading="lazy" decoding="async" className="nexus-crisp-image h-full w-full bg-black object-cover transition-transform duration-500 group-hover:scale-105" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="truncate text-base font-bold text-white sm:text-xl">{game.title}</h3>

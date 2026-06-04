@@ -323,7 +323,7 @@ export default function WishlistPage() {
                   <img
                     src={game.cover_image}
                     alt={game.title}
-                    className="w-20 h-28 object-cover rounded-lg"
+                    className="w-20 h-28 rounded-lg bg-black object-cover"
                   />
                 </Link>
 

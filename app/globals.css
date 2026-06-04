@@ -530,7 +530,7 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scale(1.03);
+  background: #000;
 }
 
 .store-cyber-poster-sheen {
@@ -883,6 +883,7 @@ body {
     width: 88px !important;
     height: 62px !important;
     object-fit: cover;
+    background: #000;
   }
 
   .store-mini-price {
@@ -1918,10 +1919,10 @@ nav.fixed {
 }
 
 .nexus-hero-title {
-  max-width: 11ch;
-  font-size: clamp(3.6rem, 10vw, 8.5rem);
-  line-height: 0.92;
-  font-weight: 950;
+  max-width: 16ch;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  line-height: 1.1;
+  font-weight: 800;
   color: #fff;
 }
 

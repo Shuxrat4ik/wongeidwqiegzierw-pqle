@@ -149,7 +149,7 @@ export default function DownloadsPage() {
           <div className="divide-y divide-cyan-200/10">
             {queue.map((game, index) => (
               <div key={`${game.id}-${index}`} className="grid gap-4 p-4 transition hover:bg-cyan-300/[0.04] sm:grid-cols-[96px_minmax(0,1fr)_220px_140px] sm:items-center">
-                <img src={game.image} alt="" className="h-16 w-24 rounded-lg object-cover" />
+                <img src={game.image} alt="" className="h-16 w-24 rounded-lg bg-black object-cover" />
                 <div className="min-w-0">
                   <h3 className="truncate font-bold">{game.title}</h3>
                   <p className="mt-1 text-sm capitalize text-white/55">{game.status} · {game.sizeGb} GB</p>

@@ -103,7 +103,6 @@ function buildMediaItems(game: Game): MediaItem[] {
   const images = uniqueStrings([
     ...(game.screenshots?.length ? game.screenshots : []),
     game.banner_image,
-    game.cover_image,
   ].flatMap(steam4kCandidates)).map((src, index) => ({
     type: 'image' as const,
     src: enhanceImageSrc(src),
@@ -582,7 +581,7 @@ export default function GameDetailPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="relative h-[50px] md:h-[150px] object-cover overflow-hidden">
+      <div className="relative h-[50px] md:h-[150px] overflow-hidden">
       </div>
 
       {/* Content */}
@@ -625,7 +624,7 @@ export default function GameDetailPage() {
               </div> */}
 
               <div className="p-3">
-                <div className="group relative aspect-video overflow-hidden rounded-lg bg-black object-cover">
+                <div className="group relative aspect-video overflow-hidden rounded-lg bg-black">
                   {activeMedia?.type === 'video' ? (
                     toYouTubeEmbedUrl(activeMedia.src) ? (
                       <iframe
@@ -990,7 +989,7 @@ export default function GameDetailPage() {
               <img
                 src={game.banner_image || game.cover_image}
                 alt={game.title}
-                className="w-full min-h-[300px] aspect-video rounded-lg object-cover"
+                className="w-full min-h-[300px] transform: scale(1.02); aspect-video rounded-lg bg-black object-cover"
                 decoding="async"
                 onError={e => { e.currentTarget.src = enhanceImageSrc(GAME_IMAGE_FALLBACK); }}
               />
